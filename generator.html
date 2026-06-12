@@ -82,6 +82,18 @@
 
 <div class="container">
 
+    <!-- ⭐ NEW: Paste Courses -->
+    <div class="section">
+        <h2>Paste Your Course Text</h2>
+        <textarea id="courseInput" 
+                  placeholder="Paste your course list here..."
+                  style="width:100%; height:180px; padding:12px; font-size:15px;"></textarea>
+        <button onclick="parseCourses()" 
+                style="width:100%; padding:14px; margin-top:10px; background:#4a6cf7; color:white; border:none; border-radius:8px; font-size:18px;">
+            Load Courses
+        </button>
+    </div>
+
     <div class="section">
         <h2>Class Time Preference</h2>
         <div class="btn-group" id="timePref">
@@ -122,29 +134,372 @@
 
     <button id="generateBtn" onclick="generateSchedule()">Generate Schedule</button>
 
+    <!-- ⭐ Results will appear here -->
+    <div id="results" style="margin-top:30px;"></div>
+
 </div>
 
 <script>
-    const selections = {
-        timePref: null,
-        endPref: null,
-        dayOff: null,
-        nightOff: null
-    };
+/* ============================================================
+   BUTTON SELECTIONS
+============================================================ */
+const selections = {
+    timePref: null,
+    endPref: null,
+    dayOff: null,
+    nightOff: null
+};
 
-    function selectOption(group, value) {
-        selections[group] = value;
+function selectOption(group, value) {
+    selections[group] = value;
 
-        const buttons = document.querySelectorAll(`#${group} button`);
-        buttons.forEach(btn => btn.classList.remove("active"));
+    const buttons = document.querySelectorAll(`#${group} button`);
+    buttons.forEach(btn => btn.classList.remove("active"));
 
-        document.getElementById(value).classList.add("active");
+    document.getElementById(value).classList.add("active");
+}
+
+/* ============================================================
+   PARSE COURSES (converted from Python)
+============================================================ */
+function parseCourses() {
+    const raw = document.getElementById("courseInput").value;
+
+    if (!raw.trim()) {
+        alert("Please paste your course text first.");
+        return;
     }
 
-    function generateSchedule() {
-        alert("Preferences selected: " + JSON.stringify(selections, null, 2));
-        // Later: call your JS schedule generator here
+    const lines = raw.split("\n");
+    let cleaned = [];
+
+    for (let line of lines) {
+        line = line.replace("On Your Worksheet", "");
+        line = line.replace(/\t/g, " ");
+        line = line.replace(/\s+/g, " ").trim();
+        line = line.replace(/\s+\d\.\d{2}\s+Click here.*$/, "");
+
+        if (line.length > 0) cleaned.push(line);
     }
+
+    const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    let courses = {};
+
+    for (let line of cleaned) {
+        const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*)/);
+        if (!m) continue;
+
+        const [_, crn, subj, num, sec, rest] = m;
+        const code = subj + num;
+
+        let day_list = [];
+        for (let wd of WEEKDAYS) {
+            let idx = rest.indexOf(wd);
+            while (idx !== -1) {
+                day_list.push([idx, wd]);
+                idx = rest.indexOf(wd, idx + 1);
+            }
+        }
+
+        day_list.sort((a, b) => a[0] - b[0]);
+        day_list = day_list.map(x => x[1]);
+
+        if (day_list.length === 0) continue;
+
+        const timeMatch = rest.match(/(\d{2}:\d{2}).*?(\d{2}:\d{2})/);
+        if (!timeMatch) continue;
+
+        const start = timeMatch[1];
+        const end = timeMatch[2];
+
+        if (!courses[code]) courses[code] = { lecture: [], lab: [] };
+
+        const entry = { course: code, section: sec, days: day_list, start, end };
+
+        if (sec.startsWith("L") || sec.endsWith("T")) {
+            courses[code].lab.push(entry);
+        } else {
+            courses[code].lecture.push(entry);
+        }
+    }
+
+    window.courses = courses;
+    alert("Courses loaded successfully!");
+}
+
+/* ============================================================
+   TIME HELPERS + OVERLAP
+============================================================ */
+function tmin(t) {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+}
+
+function overlap(a, b) {
+    const daysA = new Set(a.days);
+    const daysB = new Set(b.days);
+    let shareDay = false;
+    for (let d of daysA) {
+        if (daysB.has(d)) {
+            shareDay = true;
+            break;
+        }
+    }
+    if (!shareDay) return false;
+
+    return !(
+        tmin(a.end) <= tmin(b.start) ||
+        tmin(b.end) <= tmin(a.start)
+    );
+}
+
+/* ============================================================
+   ENGINE: BUILD ALL VALID SCHEDULES
+============================================================ */
+function generateAllSchedules(courses) {
+    let options = [];
+
+    for (const code in courses) {
+        const d = courses[code];
+        let combos = [];
+
+        if (!d.lecture || d.lecture.length === 0) continue;
+
+        if (d.lab && d.lab.length > 0) {
+            for (let lec of d.lecture) {
+                for (let lab of d.lab) {
+                    if (lab.section.endsWith("T")) {
+                        if (lab.section.startsWith(lec.section)) {
+                            combos.push([code, lec, lab]);
+                        }
+                    } else if (lab.section.startsWith("L")) {
+                        combos.push([code, lec, lab]);
+                    }
+                }
+            }
+        } else {
+            for (let lec of d.lecture) {
+                combos.push([code, lec, null]);
+            }
+        }
+
+        if (combos.length > 0) options.push(combos);
+    }
+
+    if (options.length === 0) return [];
+
+    // Cartesian product
+    let all = [[]];
+
+    for (let group of options) {
+        let next = [];
+        for (let partial of all) {
+            for (let item of group) {
+                next.push([...partial, item]);
+            }
+        }
+        all = next;
+    }
+
+    let valid = [];
+    let seen = new Set();
+
+    for (let sched of all) {
+        let events = [];
+        for (let [_, lec, lab] of sched) {
+            events.push(lec);
+            if (lab) events.push(lab);
+        }
+
+        let bad = false;
+        for (let i = 0; i < events.length; i++) {
+            for (let j = i + 1; j < events.length; j++) {
+                if (overlap(events[i], events[j])) {
+                    bad = true;
+                    break;
+                }
+            }
+            if (bad) break;
+        }
+        if (bad) continue;
+
+        const signatureItems = events.map(item => [
+            item.course,
+            item.section,
+            item.days.join(","),
+            item.start,
+            item.end
+        ]);
+        signatureItems.sort((a, b) => {
+            const sa = a.join("|");
+            const sb = b.join("|");
+            return sa < sb ? -1 : sa > sb ? 1 : 0;
+        });
+        const signature = JSON.stringify(signatureItems);
+
+        if (seen.has(signature)) continue;
+        seen.add(signature);
+        valid.push(sched);
+    }
+
+    return valid;
+}
+
+/* ============================================================
+   RANKING (converted from Python + preferences)
+============================================================ */
+function baseScore(sched) {
+    let events = [];
+    for (let [_, lec, lab] of sched) {
+        if (lec) events.push(lec);
+        if (lab) events.push(lab);
+    }
+
+    events.sort((a, b) => tmin(a.start) - tmin(b.start));
+
+    const earliest_start = tmin(events[0].start);
+    const latest_end = Math.max(...events.map(e => tmin(e.end)));
+
+    let gaps = 0;
+    for (let i = 0; i < events.length - 1; i++) {
+        const end1 = tmin(events[i].end);
+        const start2 = tmin(events[i + 1].start);
+        if (start2 > end1) {
+            gaps += (start2 - end1);
+        }
+    }
+
+    let evening_penalty = 0;
+    for (let e of events) {
+        if (tmin(e.end) > (17 * 60 + 30)) {
+            evening_penalty += 200;
+        }
+    }
+
+    let friday_penalty = 0;
+    for (let e of events) {
+        if (e.days.includes("Fri")) {
+            friday_penalty += 300;
+        }
+    }
+
+    return (
+        earliest_start * 10 +
+        latest_end * 5 +
+        gaps +
+        evening_penalty +
+        friday_penalty
+    );
+}
+
+function rankSchedules(schedules, prefs) {
+    return schedules
+        .map(sched => {
+            let score = baseScore(sched);
+
+            let events = [];
+            for (let [_, lec, lab] of sched) {
+                if (lec) events.push(lec);
+                if (lab) events.push(lab);
+            }
+            events.sort((a, b) => tmin(a.start) - tmin(b.start));
+
+            const earliest_start = tmin(events[0].start);
+            const latest_end = Math.max(...events.map(e => tmin(e.end)));
+
+            if (prefs.timePref === "early") {
+                score += earliest_start * 2;
+            } else if (prefs.timePref === "late") {
+                score += (24 * 60 - earliest_start);
+            }
+
+            if (prefs.endPref === "earlyEnd") {
+                score += latest_end * 2;
+            } else if (prefs.endPref === "lateEnd") {
+                score += (24 * 60 - latest_end);
+            }
+
+            if (prefs.dayOff) {
+                const dayMap = {
+                    monday: "Mon",
+                    tuesday: "Tue",
+                    wednesday: "Wed",
+                    thursday: "Thu",
+                    friday: "Fri"
+                };
+                const target = dayMap[prefs.dayOff];
+                let hasClassThatDay = events.some(e => e.days.includes(target));
+                if (hasClassThatDay) {
+                    score += 500;
+                }
+            }
+
+            if (prefs.nightOff) {
+                const nightMap = {
+                    mondayNight: "Mon",
+                    tuesdayNight: "Tue",
+                    wednesdayNight: "Wed",
+                    thursdayNight: "Thu",
+                    fridayNight: "Fri"
+                };
+                const targetNight = nightMap[prefs.nightOff];
+                let hasNightClass = events.some(e =>
+                    e.days.includes(targetNight) && tmin(e.end) >= 18 * 60
+                );
+                if (hasNightClass) {
+                    score += 500;
+                }
+            }
+
+            return { sched, score };
+        })
+        .sort((a, b) => a.score - b.score)
+        .map(x => x.sched);
+}
+
+/* ============================================================
+   DISPLAY RESULTS
+============================================================ */
+function displaySchedules(schedules) {
+    const container = document.getElementById("results");
+
+    if (schedules.length === 0) {
+        container.innerHTML = "<p>No valid schedules found.</p>";
+        return;
+    }
+
+    let html = "";
+    schedules.slice(0, 10).forEach((sched, idx) => {
+        html += `<div style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:8px;">`;
+        html += `<strong>Schedule ${idx + 1}</strong><br>`;
+        for (let [code, lec, lab] of sched) {
+            html += `<div style="margin-top:4px;">`;
+            html += `${code} — Lec ${lec.section} (${lec.days.join(", ")} ${lec.start}-${lec.end})`;
+            if (lab) {
+                html += `<br>Lab ${lab.section} (${lab.days.join(", ")} ${lab.start}-${lab.end})`;
+            }
+            html += `</div>`;
+        }
+        html += `</div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+/* ============================================================
+   MAIN GENERATE BUTTON
+============================================================ */
+function generateSchedule() {
+    if (!window.courses) {
+        alert("Please load your courses first.");
+        return;
+    }
+
+    const prefs = { ...selections };
+    const schedules = generateAllSchedules(window.courses);
+    const ranked = rankSchedules(schedules, prefs);
+    displaySchedules(ranked);
+}
 </script>
 
 </body>
