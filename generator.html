@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #4a6cf7;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .btn-group button {
+            padding: 12px 20px;
+            margin: 6px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            background: #e8e8e8;
+            transition: 0.2s;
+        }
+
+        .btn-group button:hover {
+            background: #d4d4d4;
+        }
+
+        .btn-group button.active {
+            background: #4a6cf7;
+            color: white;
+        }
+
+        #generateBtn {
+            width: 100%;
+            padding: 16px;
+            font-size: 20px;
+            background: #4a6cf7;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        #generateBtn:hover {
+            background: #3a57d0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Customize Your Schedule</h1>
+    <p>Select your preferences below</p>
+</header>
+
+<div class="container">
+
+    <div class="section">
+        <h2>Class Time Preference</h2>
+        <div class="btn-group" id="timePref">
+            <button onclick="selectOption('timePref','early')" id="early">Early Classes</button>
+            <button onclick="selectOption('timePref','late')" id="late">Later Classes</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>End Time Preference</h2>
+        <div class="btn-group" id="endPref">
+            <button onclick="selectOption('endPref','earlyEnd')" id="earlyEnd">Early End Time</button>
+            <button onclick="selectOption('endPref','lateEnd')" id="lateEnd">Later End Time</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Choose a Day Off (Optional)</h2>
+        <div class="btn-group" id="dayOff">
+            <button onclick="selectOption('dayOff','monday')" id="monday">Monday</button>
+            <button onclick="selectOption('dayOff','tuesday')" id="tuesday">Tuesday</button>
+            <button onclick="selectOption('dayOff','wednesday')" id="wednesday">Wednesday</button>
+            <button onclick="selectOption('dayOff','thursday')" id="thursday">Thursday</button>
+            <button onclick="selectOption('dayOff','friday')" id="friday">Friday</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Choose a Night Off (Optional)</h2>
+        <div class="btn-group" id="nightOff">
+            <button onclick="selectOption('nightOff','mondayNight')" id="mondayNight">Monday Night</button>
+            <button onclick="selectOption('nightOff','tuesdayNight')" id="tuesdayNight">Tuesday Night</button>
+            <button onclick="selectOption('nightOff','wednesdayNight')" id="wednesdayNight">Wednesday Night</button>
+            <button onclick="selectOption('nightOff','thursdayNight')" id="thursdayNight">Thursday Night</button>
+            <button onclick="selectOption('nightOff','fridayNight')" id="fridayNight">Friday Night</button>
+        </div>
+    </div>
+
+    <button id="generateBtn" onclick="generateSchedule()">Generate Schedule</button>
+
+</div>
+
+<script>
+    const selections = {
+        timePref: null,
+        endPref: null,
+        dayOff: null,
+        nightOff: null
+    };
+
+    function selectOption(group, value) {
+        selections[group] = value;
+
+        const buttons = document.querySelectorAll(`#${group} button`);
+        buttons.forEach(btn => btn.classList.remove("active"));
+
+        document.getElementById(value).classList.add("active");
+    }
+
+    function generateSchedule() {
+        alert("Preferences selected: " + JSON.stringify(selections, null, 2));
+        // Later: call your JS schedule generator here
+    }
+</script>
+
+</body>
+</html>
