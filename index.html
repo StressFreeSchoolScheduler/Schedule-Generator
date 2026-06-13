@@ -40,6 +40,7 @@
             border-radius: 8px;
             text-decoration: none;
             transition: 0.2s;
+            cursor: pointer;
         }
 
         .btn:hover {
@@ -80,7 +81,9 @@
 <header>
     <h1>Mosaic Schedule Generator</h1>
     <p>Create the perfect class schedule in seconds — no stress, no conflicts.</p>
-    <a class="btn" href="YOUR_STRIPE_CHECKOUT_LINK_HERE">Buy Now – $5</a>
+
+    <!-- BUY BUTTON (now connected to backend) -->
+    <button class="btn" onclick="startCheckout()">Buy Now – $5</button>
 </header>
 
 <section class="section">
@@ -114,6 +117,30 @@
 <footer>
     © 2026 Mosaic Scheduler Pro
 </footer>
+
+<!-- BACKEND CONNECTION SCRIPT -->
+<script>
+  const BACKEND_URL = "https://scheduler-backend-eight.vercel.app/"; // ← replace this
+
+  async function startCheckout() {
+    try {
+      const res = await fetch(BACKEND_URL + "/api/create-checkout-session", {
+        method: "POST"
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url; // send user to Stripe Checkout
+      } else {
+        alert("Error starting checkout.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Could not connect to payment server.");
+    }
+  }
+</script>
 
 </body>
 </html>
