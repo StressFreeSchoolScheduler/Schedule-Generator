@@ -124,9 +124,13 @@
 
   async function startCheckout() {
     try {
-      const res = await fetch(BACKEND_URL + "/api/create-checkout-session", {
-        method: "POST"
-      });
+        const res = await fetch(BACKEND_URL + "/api/create-checkout-session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
 
       const data = await res.json();
 
