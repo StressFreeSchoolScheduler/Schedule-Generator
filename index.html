@@ -82,8 +82,13 @@
     <h1>Mosaic Schedule Generator</h1>
     <p>Create the perfect class schedule in seconds — no stress, no conflicts.</p>
 
-    <!-- BUY BUTTON (now connected to backend) -->
-    <button class="btn" onclick="startCheckout()">Buy Now – $5</button>
+    <!-- BUY NOW BUTTON (Stripe Payment Link) -->
+    <a href="YOUR_STRIPE_PAYMENT_LINK_HERE" class="btn">Buy Now – $5</a>
+
+    <!-- ACCESS GENERATOR BUTTON (Stripe Customer Portal Login) -->
+    <a href="YOUR_STRIPE_PORTAL_LOGIN_LINK_HERE" class="btn" style="margin-left: 10px;">
+        Access Your Generator
+    </a>
 </header>
 
 <section class="section">
@@ -102,49 +107,4 @@
 
         <div class="feature-box">
             <h3>📅 Clean Visual Layout</h3>
-            <p>Beautiful timetable view with clear time markers and conflict detection.</p>
-        </div>
-    </div>
-</section>
-
-<section class="section">
-    <h2>How It Works</h2>
-    <p>1. Enter your course list<br>
-       2. Click generate<br>
-       3. Instantly get the best schedule options</p>
-</section>
-
-<footer>
-    © 2026 Mosaic Scheduler Pro
-</footer>
-
-<!-- BACKEND CONNECTION SCRIPT -->
-<script>
-  const BACKEND_URL = "https://scheduler-backend-1lzq7cpmh-luke-gordon-s-projects.vercel.app";
-
-  async function startCheckout() {
-    try {
-        const res = await fetch(BACKEND_URL + "/api/create-checkout-session", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
-
-
-      const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url; // send user to Stripe Checkout
-      } else {
-        alert("Error starting checkout.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Could not connect to payment server.");
-    }
-  }
-</script>
-
-</body>
-</html>
+            <p>Beautiful timetable view with clear
