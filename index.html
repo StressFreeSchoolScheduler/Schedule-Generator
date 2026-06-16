@@ -16,24 +16,40 @@
         header {
             background: #4a6cf7;
             color: white;
-            padding: 70px 20px;
+            padding: 80px 20px;
             text-align: center;
         }
 
         header h1 {
-            font-size: 46px;
+            font-size: 48px;
             margin-bottom: 12px;
         }
 
         header p {
             font-size: 20px;
             opacity: 0.95;
-            margin-bottom: 35px;
+            margin-bottom: 25px;
+        }
+
+        .subline {
+            font-size: 26px;
+            margin-top: 20px;
+            opacity: 0.95;
+            font-weight: bold;
+        }
+
+        .subtext {
+            font-size: 18px;
+            margin-top: 10px;
+            opacity: 0.85;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .btn {
             display: inline-block;
-            margin: 10px;
+            margin: 12px;
             padding: 14px 32px;
             background: white;
             color: #4a6cf7;
@@ -49,31 +65,42 @@
         }
 
         .section {
-            padding: 60px 20px;
-            max-width: 900px;
+            padding: 70px 20px;
+            max-width: 1000px;
             margin: auto;
             text-align: center;
         }
 
+        .section h2 {
+            font-size: 34px;
+            margin-bottom: 20px;
+        }
+
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-            margin-top: 35px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
         }
 
         .feature-box {
             background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+
+        .feature-box h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
         }
 
         footer {
             text-align: center;
-            padding: 20px;
+            padding: 25px;
             background: #eee;
-            margin-top: 50px;
+            margin-top: 60px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -82,7 +109,13 @@
 
 <header>
     <h1>Mosaic Schedule Generator</h1>
-    <p>Create the perfect class schedule in seconds — no stress, no conflicts.</p>
+    <p>Create perfect class schedules in seconds — no stress, no conflicts.</p>
+
+    <div class="subline">One purchase. Unlimited semesters.</div>
+    <p class="subtext">
+        Use it every semester for your entire time in college or university.
+        No subscriptions. No extra fees. Just instant schedules forever.
+    </p>
 
     <!-- BUY BUTTON -->
     <a href="https://buy.stripe.com/test_9B63cnbBs45s5cDeEn0co00" class="btn">
@@ -101,7 +134,7 @@
     <div class="features">
         <div class="feature-box">
             <h3>⚡ Instant Schedules</h3>
-            <p>Generate every possible schedule combination instantly — no manual work.</p>
+            <p>Generate every possible schedule combination instantly — no manual work, no stress.</p>
         </div>
 
         <div class="feature-box">
@@ -111,17 +144,17 @@
 
         <div class="feature-box">
             <h3>📅 Clean Visual Layout</h3>
-            <p>Beautiful timetable view with clear time markers and conflict detection.</p>
+            <p>Beautiful timetable view with clear time markers, conflict detection, and easy comparison.</p>
         </div>
     </div>
 </section>
 
 <section class="section">
     <h2>How It Works</h2>
-    <p>
+    <p style="font-size: 18px; opacity: 0.85;">
         1. Enter your course list<br>
         2. Click generate<br>
-        3. Instantly get the best schedule options
+        3. Instantly get the best schedule options — ranked and ready to choose
     </p>
 </section>
 
