@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule Generator</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -71,7 +72,8 @@
         #generateBtn:hover {
             background: #3a57d0;
         }
-        /* TIMETABLE GRID WITH TIMES ON LEFT */
+
+        /* ⭐ TIMETABLE GRID WITH TIMES ON LEFT */
         .timetable {
             position: relative;
             width: 100%;
@@ -80,8 +82,9 @@
             background: #ffffff;
             border-radius: 10px;
             overflow: hidden;
+            margin-top: 20px;
         }
-        
+
         .time-label {
             position: absolute;
             left: 0;
@@ -91,7 +94,7 @@
             font-size: 12px;
             color: #555;
         }
-        
+
         .half-hour-line {
             position: absolute;
             left: 60px;
@@ -99,7 +102,7 @@
             height: 1px;
             background: #eee;
         }
-        
+
         .day-header {
             position: absolute;
             top: 0;
@@ -111,7 +114,7 @@
             line-height: 30px;
             font-weight: bold;
         }
-        
+
         .class-block {
             position: absolute;
             border-radius: 6px;
@@ -121,9 +124,9 @@
             overflow: hidden;
             box-sizing: border-box;
         }
-
     </style>
 </head>
+
 <body>
 
 <header>
@@ -133,7 +136,6 @@
 
 <div class="container">
 
-    <!-- ⭐ NEW: Paste Courses -->
     <div class="section">
         <h2>Paste Your Course Text</h2>
         <textarea id="courseInput" 
@@ -185,84 +187,11 @@
 
     <button id="generateBtn" onclick="generateSchedule()">Generate Schedule</button>
 
-    <!-- ⭐ Results will appear here -->
     <div id="results" style="margin-top:30px;"></div>
 
 </div>
 
-<script>
-
-
-
-function drawTimetable(container, events) {
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-    const startHour = 8;
-    const endHour = 20;
-    const totalMinutes = (endHour - startHour) * 60;
-
-    container.innerHTML = "";
-
-    days.forEach((day, i) => {
-        const header = document.createElement("div");
-        header.className = "day-header";
-        header.style.left = `${60 + i * ((container.clientWidth - 60) / 5)}px`;
-        header.style.width = `${(container.clientWidth - 60) / 5}px`;
-        header.innerText = day;
-        container.appendChild(header);
-    });
-
-    for (let h = startHour; h <= endHour; h++) {
-        for (let m of [0, 30]) {
-            const minutesFromStart = (h - startHour) * 60 + m;
-            const y = (minutesFromStart / totalMinutes) * container.clientHeight;
-
-            if (m === 0) {
-                const label = document.createElement("div");
-                label.className = "time-label";
-                label.style.top = `${y - 6}px`;
-                label.innerText = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
-                container.appendChild(label);
-            }
-
-            const line = document.createElement("div");
-            line.className = "half-hour-line";
-            line.style.top = `${y}px`;
-            container.appendChild(line);
-        }
-    }
-
-    const colors = ["#4a6cf7", "#e67e22", "#16a085", "#8e44ad", "#c0392b"];
-
-    events.forEach((ev, idx) => {
-        ev.days.forEach(day => {
-            const dIndex = days.indexOf(day);
-            if (dIndex === -1) return;
-
-            const block = document.createElement("div");
-            block.className = "class-block";
-            block.style.background = colors[idx % colors.length];
-
-            const start = tmin(ev.start) - startHour * 60;
-            const end = tmin(ev.end) - startHour * 60;
-
-            const top = (start / totalMinutes) * container.clientHeight;
-            const height = ((end - start) / totalMinutes) * container.clientHeight;
-
-            const left = 60 + dIndex * ((container.clientWidth - 60) / 5);
-            const width = (container.clientWidth - 60) / 5;
-
-            block.style.top = `${top}px`;
-            block.style.left = `${left}px`;
-            block.style.width = `${width}px`;
-            block.style.height = `${height}px`;
-
-            block.innerHTML =
-                `<strong>${ev.course}</strong><br>${ev.section}<br>${ev.start}–${ev.end}`;
-
-            container.appendChild(block);
-        });
-    });
-}
+<script data-version="v3">
 
 /* ============================================================
    BUTTON SELECTIONS
@@ -284,7 +213,7 @@ function selectOption(group, value) {
 }
 
 /* ============================================================
-   PARSE COURSES (converted from Python)
+   PARSE COURSES
 ============================================================ */
 function parseCourses() {
     const raw = document.getElementById("courseInput").value;
@@ -352,7 +281,7 @@ function parseCourses() {
 }
 
 /* ============================================================
-   TIME HELPERS + OVERLAP
+   TIME HELPERS
 ============================================================ */
 function tmin(t) {
     const [h, m] = t.split(":").map(Number);
@@ -412,7 +341,6 @@ function generateAllSchedules(courses) {
 
     if (options.length === 0) return [];
 
-    // Cartesian product
     let all = [[]];
 
     for (let group of options) {
@@ -470,7 +398,7 @@ function generateAllSchedules(courses) {
 }
 
 /* ============================================================
-   RANKING (converted from Python + preferences)
+   RANKING
 ============================================================ */
 function baseScore(sched) {
     let events = [];
@@ -582,13 +510,12 @@ function rankSchedules(schedules, prefs) {
 }
 
 /* ============================================================
-   Draw Timetable
+   ⭐ NEW TIMETABLE DRAWING
 ============================================================ */
-
 function drawTimetable(container, events) {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
     const startHour = 8;
-    const endHour = 20; // covers all evening labs
+    const endHour = 20;
     const totalMinutes = (endHour - startHour) * 60;
 
     container.innerHTML = "";
@@ -627,119 +554,4 @@ function drawTimetable(container, events) {
     /* Colors */
     const colors = ["#4a6cf7", "#e67e22", "#16a085", "#8e44ad", "#c0392b"];
 
-    /* Class blocks */
-    events.forEach((ev, idx) => {
-        ev.days.forEach(day => {
-            const dIndex = days.indexOf(day);
-            if (dIndex === -1) return;
-
-            const block = document.createElement("div");
-            block.className = "class-block";
-            block.style.background = colors[idx % colors.length];
-
-            const start = tmin(ev.start) - startHour * 60;
-            const end = tmin(ev.end) - startHour * 60;
-
-            const top = (start / totalMinutes) * container.clientHeight;
-            const height = ((end - start) / totalMinutes) * container.clientHeight;
-
-            const left = 60 + dIndex * ((container.clientWidth - 60) / 5);
-            const width = (container.clientWidth - 60) / 5;
-
-            block.style.top = `${top}px`;
-            block.style.left = `${left}px`;
-            block.style.width = `${width}px`;
-            block.style.height = `${height}px`;
-
-            block.innerHTML =
-                `<strong>${ev.course}</strong><br>${ev.section}<br>${ev.start}–${ev.end}`;
-
-            container.appendChild(block);
-        });
-    });
-}
-
-
-/* ============================================================
-   DISPLAY RESULTS (SIDE‑BY‑SIDE)
-============================================================ */
-function displaySchedules(schedules) {
-    const container = document.getElementById("results");
-
-    if (schedules.length === 0) {
-        container.innerHTML = "<p>No valid schedules found.</p>";
-        return;
-    }
-
-    container.innerHTML = "";
-
-    schedules.slice(0, 10).forEach((sched, idx) => {
-        const wrapper = document.createElement("div");
-        wrapper.style.border = "1px solid #ddd";
-        wrapper.style.padding = "15px";
-        wrapper.style.marginBottom = "20px";
-        wrapper.style.borderRadius = "10px";
-        wrapper.style.background = "white";
-
-        const title = document.createElement("h3");
-        title.innerText = `Schedule ${idx + 1}`;
-        wrapper.appendChild(title);
-
-        /* Side‑by‑side container */
-        const row = document.createElement("div");
-        row.className = "schedule-wrapper";
-
-        /* LEFT SIDE — TEXT */
-        const textDiv = document.createElement("div");
-        textDiv.className = "text-schedule";
-
-        sched.forEach(([code, lec, lab]) => {
-            const div = document.createElement("div");
-            div.innerHTML = `
-                <strong>${code}</strong><br>
-                Lec ${lec.section} (${lec.days.join(", ")} ${lec.start}-${lec.end})
-                ${lab ? `<br>Lab ${lab.section} (${lab.days.join(", ")} ${lab.start}-${lab.end})` : ""}
-                <br><br>
-            `;
-            textDiv.appendChild(div);
-        });
-
-        /* RIGHT SIDE — TIMETABLE */
-        const timetable = document.createElement("div");
-        timetable.className = "timetable";
-
-        /* Collect events */
-        let events = [];
-        sched.forEach(([_, lec, lab]) => {
-            events.push(lec);
-            if (lab) events.push(lab);
-        });
-
-        drawTimetable(timetable, events);
-
-        row.appendChild(textDiv);
-        row.appendChild(timetable);
-        wrapper.appendChild(row);
-
-        container.appendChild(wrapper);
-    });
-}
-
-/* ============================================================
-   MAIN GENERATE BUTTON
-============================================================ */
-function generateSchedule() {
-    if (!window.courses) {
-        alert("Please load your courses first.");
-        return;
-    }
-
-    const prefs = { ...selections };
-    const schedules = generateAllSchedules(window.courses);
-    const ranked = rankSchedules(schedules, prefs);
-    displaySchedules(ranked);
-}
-</script>
-
-</body>
-</html>
+    /* Class blocks
