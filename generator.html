@@ -191,6 +191,79 @@
 </div>
 
 <script>
+
+
+
+function drawTimetable(container, events) {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    const startHour = 8;
+    const endHour = 20;
+    const totalMinutes = (endHour - startHour) * 60;
+
+    container.innerHTML = "";
+
+    days.forEach((day, i) => {
+        const header = document.createElement("div");
+        header.className = "day-header";
+        header.style.left = `${60 + i * ((container.clientWidth - 60) / 5)}px`;
+        header.style.width = `${(container.clientWidth - 60) / 5}px`;
+        header.innerText = day;
+        container.appendChild(header);
+    });
+
+    for (let h = startHour; h <= endHour; h++) {
+        for (let m of [0, 30]) {
+            const minutesFromStart = (h - startHour) * 60 + m;
+            const y = (minutesFromStart / totalMinutes) * container.clientHeight;
+
+            if (m === 0) {
+                const label = document.createElement("div");
+                label.className = "time-label";
+                label.style.top = `${y - 6}px`;
+                label.innerText = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
+                container.appendChild(label);
+            }
+
+            const line = document.createElement("div");
+            line.className = "half-hour-line";
+            line.style.top = `${y}px`;
+            container.appendChild(line);
+        }
+    }
+
+    const colors = ["#4a6cf7", "#e67e22", "#16a085", "#8e44ad", "#c0392b"];
+
+    events.forEach((ev, idx) => {
+        ev.days.forEach(day => {
+            const dIndex = days.indexOf(day);
+            if (dIndex === -1) return;
+
+            const block = document.createElement("div");
+            block.className = "class-block";
+            block.style.background = colors[idx % colors.length];
+
+            const start = tmin(ev.start) - startHour * 60;
+            const end = tmin(ev.end) - startHour * 60;
+
+            const top = (start / totalMinutes) * container.clientHeight;
+            const height = ((end - start) / totalMinutes) * container.clientHeight;
+
+            const left = 60 + dIndex * ((container.clientWidth - 60) / 5);
+            const width = (container.clientWidth - 60) / 5;
+
+            block.style.top = `${top}px`;
+            block.style.left = `${left}px`;
+            block.style.width = `${width}px`;
+            block.style.height = `${height}px`;
+
+            block.innerHTML =
+                `<strong>${ev.course}</strong><br>${ev.section}<br>${ev.start}–${ev.end}`;
+
+            container.appendChild(block);
+        });
+    });
+}
+
 /* ============================================================
    BUTTON SELECTIONS
 ============================================================ */
