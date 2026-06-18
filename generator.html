@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule Generator</title>
-
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -72,8 +71,7 @@
         #generateBtn:hover {
             background: #3a57d0;
         }
-
-        /* ⭐ TIMETABLE GRID WITH TIMES ON LEFT */
+        /* TIMETABLE GRID WITH TIMES ON LEFT */
         .timetable {
             position: relative;
             width: 100%;
@@ -82,9 +80,8 @@
             background: #ffffff;
             border-radius: 10px;
             overflow: hidden;
-            margin-top: 20px;
         }
-
+        
         .time-label {
             position: absolute;
             left: 0;
@@ -94,7 +91,7 @@
             font-size: 12px;
             color: #555;
         }
-
+        
         .half-hour-line {
             position: absolute;
             left: 60px;
@@ -102,7 +99,7 @@
             height: 1px;
             background: #eee;
         }
-
+        
         .day-header {
             position: absolute;
             top: 0;
@@ -114,7 +111,7 @@
             line-height: 30px;
             font-weight: bold;
         }
-
+        
         .class-block {
             position: absolute;
             border-radius: 6px;
@@ -124,9 +121,9 @@
             overflow: hidden;
             box-sizing: border-box;
         }
+
     </style>
 </head>
-
 <body>
 
 <header>
@@ -136,6 +133,7 @@
 
 <div class="container">
 
+    <!-- ⭐ NEW: Paste Courses -->
     <div class="section">
         <h2>Paste Your Course Text</h2>
         <textarea id="courseInput" 
@@ -187,11 +185,14 @@
 
     <button id="generateBtn" onclick="generateSchedule()">Generate Schedule</button>
 
+    <!-- ⭐ Results will appear here -->
     <div id="results" style="margin-top:30px;"></div>
 
 </div>
 
-<script data-version="v3">
+<script>
+
+
 
 /* ============================================================
    BUTTON SELECTIONS
@@ -213,7 +214,7 @@ function selectOption(group, value) {
 }
 
 /* ============================================================
-   PARSE COURSES
+   PARSE COURSES (converted from Python)
 ============================================================ */
 function parseCourses() {
     const raw = document.getElementById("courseInput").value;
@@ -281,7 +282,7 @@ function parseCourses() {
 }
 
 /* ============================================================
-   TIME HELPERS
+   TIME HELPERS + OVERLAP
 ============================================================ */
 function tmin(t) {
     const [h, m] = t.split(":").map(Number);
@@ -341,6 +342,7 @@ function generateAllSchedules(courses) {
 
     if (options.length === 0) return [];
 
+    // Cartesian product
     let all = [[]];
 
     for (let group of options) {
@@ -398,7 +400,7 @@ function generateAllSchedules(courses) {
 }
 
 /* ============================================================
-   RANKING
+   RANKING (converted from Python + preferences)
 ============================================================ */
 function baseScore(sched) {
     let events = [];
@@ -510,12 +512,13 @@ function rankSchedules(schedules, prefs) {
 }
 
 /* ============================================================
-   ⭐ NEW TIMETABLE DRAWING
+   Draw Timetable
 ============================================================ */
+
 function drawTimetable(container, events) {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
     const startHour = 8;
-    const endHour = 20;
+    const endHour = 20; // covers all evening labs
     const totalMinutes = (endHour - startHour) * 60;
 
     container.innerHTML = "";
@@ -554,7 +557,7 @@ function drawTimetable(container, events) {
     /* Colors */
     const colors = ["#4a6cf7", "#e67e22", "#16a085", "#8e44ad", "#c0392b"];
 
-    /* Class blocks
+    /* Class blocks */
     events.forEach((ev, idx) => {
         ev.days.forEach(day => {
             const dIndex = days.indexOf(day);
