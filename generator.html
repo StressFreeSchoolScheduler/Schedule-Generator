@@ -457,8 +457,58 @@ function rankSchedules(schedules, prefs) {
         .map(x => x.sched);
 }
 
+
+
+function drawTimetable(container, events) {
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    const startHour = 8;
+    const endHour = 18;
+    const totalMinutes = (endHour - startHour) * 60;
+
+    days.forEach((day, i) => {
+        const header = document.createElement("div");
+        header.className = "day-header";
+        header.style.left = `${i * 20}%`;
+        header.innerText = day;
+        container.appendChild(header);
+    });
+
+    for (let h = startHour; h <= endHour; h++) {
+        const line = document.createElement("div");
+        line.className = "hour-line";
+        line.style.top = `${((h - startHour) * 60 / totalMinutes) * 100}%`;
+        container.appendChild(line);
+    }
+
+    const colors = ["#4a6cf7", "#e67e22", "#16a085", "#8e44ad", "#c0392b"];
+
+    events.forEach((ev, idx) => {
+        ev.days.forEach(day => {
+            const dIndex = days.indexOf(day);
+            if (dIndex === -1) return;
+
+            const block = document.createElement("div");
+            block.className = "class-block";
+            block.style.background = colors[idx % colors.length];
+
+            const start = tmin(ev.start) - startHour * 60;
+            const end = tmin(ev.end) - startHour * 60;
+
+            block.style.left = `${dIndex * 20}%`;
+            block.style.top = `${(start / totalMinutes) * 100}%`;
+            block.style.width = "20%";
+            block.style.height = `${((end - start) / totalMinutes) * 100}%`;
+
+            block.innerHTML =
+                `<strong>${ev.course}</strong><br>${ev.section}<br>${ev.start}–${ev.end}`;
+
+            container.appendChild(block);
+        });
+    });
+}
+
 /* ============================================================
-   DISPLAY RESULTS
+   DISPLAY RESULTS (SIDE‑BY‑SIDE)
 ============================================================ */
 function displaySchedules(schedules) {
     const container = document.getElementById("results");
@@ -468,22 +518,58 @@ function displaySchedules(schedules) {
         return;
     }
 
-    let html = "";
-    schedules.slice(0, 10).forEach((sched, idx) => {
-        html += `<div style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:8px;">`;
-        html += `<strong>Schedule ${idx + 1}</strong><br>`;
-        for (let [code, lec, lab] of sched) {
-            html += `<div style="margin-top:4px;">`;
-            html += `${code} — Lec ${lec.section} (${lec.days.join(", ")} ${lec.start}-${lec.end})`;
-            if (lab) {
-                html += `<br>Lab ${lab.section} (${lab.days.join(", ")} ${lab.start}-${lab.end})`;
-            }
-            html += `</div>`;
-        }
-        html += `</div>`;
-    });
+    container.innerHTML = "";
 
-    container.innerHTML = html;
+    schedules.slice(0, 10).forEach((sched, idx) => {
+        const wrapper = document.createElement("div");
+        wrapper.style.border = "1px solid #ddd";
+        wrapper.style.padding = "15px";
+        wrapper.style.marginBottom = "20px";
+        wrapper.style.borderRadius = "10px";
+        wrapper.style.background = "white";
+
+        const title = document.createElement("h3");
+        title.innerText = `Schedule ${idx + 1}`;
+        wrapper.appendChild(title);
+
+        /* Side‑by‑side container */
+        const row = document.createElement("div");
+        row.className = "schedule-wrapper";
+
+        /* LEFT SIDE — TEXT */
+        const textDiv = document.createElement("div");
+        textDiv.className = "text-schedule";
+
+        sched.forEach(([code, lec, lab]) => {
+            const div = document.createElement("div");
+            div.innerHTML = `
+                <strong>${code}</strong><br>
+                Lec ${lec.section} (${lec.days.join(", ")} ${lec.start}-${lec.end})
+                ${lab ? `<br>Lab ${lab.section} (${lab.days.join(", ")} ${lab.start}-${lab.end})` : ""}
+                <br><br>
+            `;
+            textDiv.appendChild(div);
+        });
+
+        /* RIGHT SIDE — TIMETABLE */
+        const timetable = document.createElement("div");
+        timetable.className = "timetable";
+
+        /* Collect events */
+        let events = [];
+        sched.forEach(([_, lec, lab]) => {
+            events.push(lec);
+            if (lab) events.push(lab);
+        });
+
+        drawTimetable(timetable, events);
+
+        row.appendChild(textDiv);
+        row.appendChild(timetable);
+        wrapper.appendChild(row);
+
+        container.appendChild(wrapper);
+    });
 }
 
 /* ============================================================
