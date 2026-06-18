@@ -71,6 +71,55 @@
         #generateBtn:hover {
             background: #3a57d0;
         }
+        /* TIMETABLE GRID WITH TIMES ON LEFT */
+        .timetable {
+            position: relative;
+            width: 100%;
+            height: 800px;
+            border: 1px solid #ccc;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 60px repeat(5, 1fr); /* time column + 5 days */
+        }
+        .time-label {
+            position: absolute;
+            left: 0;
+            width: 60px;
+            text-align: right;
+            padding-right: 8px;
+            font-size: 12px;
+            color: #555;
+        }
+        .half-hour-line {
+            position: absolute;
+            left: 60px;
+            width: calc(100% - 60px);
+            height: 1px;
+            background: #eee;
+        }
+        .day-header {
+            position: absolute;
+            top: 0;
+            height: 30px;
+            width: calc((100% - 60px) / 5);
+            background: #4a6cf7;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+        }
+        .class-block {
+            position: absolute;
+            border-radius: 6px;
+            padding: 4px;
+            font-size: 12px;
+            color: white;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
     </style>
 </head>
 <body>
@@ -457,31 +506,56 @@ function rankSchedules(schedules, prefs) {
         .map(x => x.sched);
 }
 
-
+/* ============================================================
+   Draw Timetable
+============================================================ */
 
 function drawTimetable(container, events) {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
     const startHour = 8;
-    const endHour = 18;
+    const endHour = 20; // extend to 8pm for safety
     const totalMinutes = (endHour - startHour) * 60;
 
+    /* Clear container */
+    container.innerHTML = "";
+
+    /* Day headers */
     days.forEach((day, i) => {
         const header = document.createElement("div");
         header.className = "day-header";
-        header.style.left = `${i * 20}%`;
+        header.style.left = `${60 + i * ((container.clientWidth - 60) / 5)}px`;
+        header.style.width = `${(container.clientWidth - 60) / 5}px`;
         header.innerText = day;
         container.appendChild(header);
     });
 
+    /* Time labels + half-hour lines */
     for (let h = startHour; h <= endHour; h++) {
-        const line = document.createElement("div");
-        line.className = "hour-line";
-        line.style.top = `${((h - startHour) * 60 / totalMinutes) * 100}%`;
-        container.appendChild(line);
+        for (let m of [0, 30]) {
+            const minutesFromStart = (h - startHour) * 60 + m;
+            const y = (minutesFromStart / totalMinutes) * container.clientHeight;
+
+            if (m === 0) {
+                // hour label
+                const label = document.createElement("div");
+                label.className = "time-label";
+                label.style.top = `${y - 6}px`;
+                label.innerText = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
+                container.appendChild(label);
+            }
+
+            // line
+            const line = document.createElement("div");
+            line.className = "half-hour-line";
+            line.style.top = `${y}px`;
+            container.appendChild(line);
+        }
     }
 
+    /* Colors */
     const colors = ["#4a6cf7", "#e67e22", "#16a085", "#8e44ad", "#c0392b"];
 
+    /* Class blocks */
     events.forEach((ev, idx) => {
         ev.days.forEach(day => {
             const dIndex = days.indexOf(day);
@@ -494,10 +568,16 @@ function drawTimetable(container, events) {
             const start = tmin(ev.start) - startHour * 60;
             const end = tmin(ev.end) - startHour * 60;
 
-            block.style.left = `${dIndex * 20}%`;
-            block.style.top = `${(start / totalMinutes) * 100}%`;
-            block.style.width = "20%";
-            block.style.height = `${((end - start) / totalMinutes) * 100}%`;
+            const top = (start / totalMinutes) * container.clientHeight;
+            const height = ((end - start) / totalMinutes) * container.clientHeight;
+
+            const left = 60 + dIndex * ((container.clientWidth - 60) / 5);
+            const width = (container.clientWidth - 60) / 5;
+
+            block.style.top = `${top}px`;
+            block.style.left = `${left}px`;
+            block.style.width = `${width}px`;
+            block.style.height = `${height}px`;
 
             block.innerHTML =
                 `<strong>${ev.course}</strong><br>${ev.section}<br>${ev.start}–${ev.end}`;
@@ -506,6 +586,7 @@ function drawTimetable(container, events) {
         });
     });
 }
+
 
 /* ============================================================
    DISPLAY RESULTS (SIDE‑BY‑SIDE)
