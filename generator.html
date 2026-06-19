@@ -75,7 +75,7 @@
         .timetable {
             display: grid;
             grid-template-columns: 60px repeat(5, 1fr);
-            grid-auto-rows: 30px; /* each row = 30 minutes */
+            grid-auto-rows: 10px; /* each row = 5 minutes */
             width: 100%;
             border: 1px solid #ccc;
             background: white;
@@ -90,7 +90,7 @@
             color: #555;
             padding-right: 6px;
             text-align: right;
-            line-height: 30px;
+            line-height: 10px;
         }
         
         .day-header {
@@ -513,7 +513,7 @@ function drawTimetable(container, events) {
     days.forEach((day, i) => {
         const header = document.createElement("div");
         header.className = "day-header";
-        header.style.gridColumn = (i + 2); 
+        header.style.gridColumn = (i + 2);
         header.style.gridRow = 1;
         header.innerText = day;
         container.appendChild(header);
@@ -528,7 +528,7 @@ function drawTimetable(container, events) {
             label.style.gridRow = row;
             label.innerText = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
             container.appendChild(label);
-            row++;
+            row += 6; // 30 minutes = 6 rows of 5 minutes
         }
     }
 
@@ -548,8 +548,8 @@ function drawTimetable(container, events) {
             const start = tmin(ev.start);
             const end = tmin(ev.end);
 
-            const startRow = (start - startHour * 60) / 30 + 2;
-            const endRow = (end - startHour * 60) / 30 + 2;
+            const startRow = Math.floor((start - startHour * 60) / 5) + 2;
+            const endRow = Math.floor((end - startHour * 60) / 5) + 2;
 
             block.style.gridColumn = dIndex + 2;
             block.style.gridRow = `${startRow} / ${endRow}`;
@@ -561,7 +561,6 @@ function drawTimetable(container, events) {
         });
     });
 }
-
 
 /* ============================================================
    DISPLAY RESULTS (SIDE‑BY‑SIDE)
