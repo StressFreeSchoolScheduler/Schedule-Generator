@@ -170,6 +170,8 @@
             <button onclick="selectOption('nightOff','fridayNight')" id="fridayNight">Friday Night</button>
         </div>
     </div>
+    
+    <button class="filter-btn" id="clearFiltersBtn">Clear All Filters</button>
 
     <button id="generateBtn" onclick="generateSchedule()">Generate Schedule</button>
 
@@ -200,6 +202,25 @@ function selectOption(group, value) {
 
     document.getElementById(value).classList.add("active");
 }
+    
+document.getElementById("clearFiltersBtn").addEventListener("click", () => {
+    // Reset selections object
+    selections = {
+        timePref: null,
+        endPref: null,
+        dayOff: null,
+        nightOff: null
+    };
+
+    // Remove "selected" class from ALL filter buttons
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+        btn.classList.remove("selected");
+    });
+
+    // Optional: Clear results area
+    document.getElementById("results").innerHTML = "<p>Filters cleared. Choose new preferences.</p>";
+});
+
 
 /* ============================================================
    PARSE COURSES (converted from Python)
