@@ -187,7 +187,7 @@
 /* ============================================================
    BUTTON SELECTIONS
 ============================================================ */
-const selections = {
+let selections = {
     timePref: null,
     endPref: null,
     dayOff: null,
@@ -212,15 +212,14 @@ document.getElementById("clearFiltersBtn").addEventListener("click", () => {
         nightOff: null
     };
 
-    // Remove "selected" class from ALL filter buttons
-    document.querySelectorAll(".filter-btn").forEach(btn => {
-        btn.classList.remove("selected");
+    // Remove "active" class from ALL filter buttons
+    document.querySelectorAll("button.active").forEach(btn => {
+        btn.classList.remove("active");
     });
 
     // Optional: Clear results area
     document.getElementById("results").innerHTML = "<p>Filters cleared. Choose new preferences.</p>";
 });
-
     
 document.querySelectorAll(".filter-btn").forEach(btn => {
     btn.addEventListener("click", () => {
