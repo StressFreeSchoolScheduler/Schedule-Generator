@@ -646,6 +646,36 @@ function checkImpossiblePreferences(courses, prefs) {
 
     return null;
 }
+    
+function checkNoScheduleCanAvoidDay(schedules, prefs) {
+    if (!prefs.dayOff) return null;
+
+    const dayMap = {
+        monday: "Mon",
+        tuesday: "Tue",
+        wednesday: "Wed",
+        thursday: "Thu",
+        friday: "Fri"
+    };
+    const target = dayMap[prefs.dayOff];
+
+    // If at least one schedule avoids the day, it's fine
+    for (let sched of schedules) {
+        let events = [];
+        for (let [_, lec, lab] of sched) {
+            if (lec) events.push(lec);
+            if (lab) events.push(lab);
+        }
+
+        const hasClassThatDay = events.some(e => e.days.includes(target));
+        if (!hasClassThatDay) {
+            return null; // Found a schedule that avoids the day
+        }
+    }
+
+    // No schedule avoids the selected day
+    return `No possible schedule can avoid ${target}.`;
+}
 
 /* ============================================================
    MAIN GENERATE BUTTON
@@ -665,9 +695,17 @@ function generateSchedule() {
     }
 
     const schedules = generateAllSchedules(window.courses);
+
+    const noSched = checkNoScheduleCanAvoidDay(schedules, prefs);
+    if (noSched) {
+        document.getElementById("results").innerHTML = `<p>${noSched}</p>`;
+        return;
+    }
+
     const ranked = rankSchedules(schedules, prefs);
     displaySchedules(ranked);
 }
+
 
 </script>
 
