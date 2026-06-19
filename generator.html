@@ -220,6 +220,23 @@ document.getElementById("clearFiltersBtn").addEventListener("click", () => {
     // Optional: Clear results area
     document.getElementById("results").innerHTML = "<p>Filters cleared. Choose new preferences.</p>";
 });
+    
+document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const group = btn.dataset.group;
+        const value = btn.dataset.value;
+
+        // Remove selected from all buttons in this group
+        document.querySelectorAll(`.filter-btn[data-group="${group}"]`)
+            .forEach(b => b.classList.remove("selected"));
+
+        // Add selected to clicked button
+        btn.classList.add("selected");
+
+        // Update selections
+        selections[group] = value;
+    });
+});
 
 
 /* ============================================================
