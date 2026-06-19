@@ -75,6 +75,7 @@
         .timetable {
             display: grid;
             grid-template-columns: 60px repeat(5, 1fr);
+            grid-template-rows: 30px auto;
             grid-auto-rows: 10px; /* each row = 5 minutes */
             width: 100%;
             border: 1px solid #ccc;
@@ -506,7 +507,7 @@ function drawTimetable(container, events) {
     container.innerHTML = "";
 
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-    const startHour = 8;
+    const startHour = 6;
     const endHour = 20;
 
     /* Day headers */
