@@ -220,6 +220,7 @@ document.getElementById("clearFiltersBtn").addEventListener("click", () => {
     // Optional: Clear results area
     document.getElementById("results").innerHTML = "<p>Filters cleared. Choose new preferences.</p>";
 });
+
     
 document.querySelectorAll(".filter-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -227,8 +228,10 @@ document.querySelectorAll(".filter-btn").forEach(btn => {
         const value = btn.dataset.value;
 
         // Remove selected from all buttons in this group
-        document.querySelectorAll(`.filter-btn[data-group="${group}"]`)
-            .forEach(b => b.classList.remove("selected"));
+        document.querySelectorAll("button.active").forEach(btn => {
+            btn.classList.remove("active");
+        });
+
 
         // Add selected to clicked button
         btn.classList.add("selected");
