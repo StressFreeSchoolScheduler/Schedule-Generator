@@ -461,18 +461,47 @@ function rankSchedules(schedules, prefs) {
             const earliest_start = tmin(events[0].start);
             const latest_end = Math.max(...events.map(e => tmin(e.end)));
 
-            /* TIME OF DAY PREF */
+            /* TIME OF DAY PREF — improved */
             if (prefs.timePref === "early") {
-                score += earliest_start * 200;
-            } else if (prefs.timePref === "late") {
-                score += (24 * 60 - earliest_start) * 200;
+                // reward early starts on ALL days
+                const dayStarts = {};
+            
+                for (let e of events) {
+                    for (let d of e.days) {
+                        const start = tmin(e.start);
+                        if (!dayStarts[d] || start < dayStarts[d]) {
+                            dayStarts[d] = start;
+                        }
+                    }
+                }
+            
+                // sum of earliest starts per day
+                const totalStart = Object.values(dayStarts).reduce((a, b) => a + b, 0);
+            
+                score += totalStart * 50;  // lower = better
             }
             
-            if (prefs.endPref === "earlyEnd") {
-                score += latest_end * 200;
-            } else if (prefs.endPref === "lateEnd") {
-                score += (24 * 60 - latest_end) * 200;
+            else if (prefs.timePref === "late") {
+                // reward late starts on ALL days
+                const dayStarts = {};
+            
+                for (let e of events) {
+                    for (let d of e.days) {
+                        const start = tmin(e.start);
+                        if (!dayStarts[d] || start < dayStarts[d]) {
+                            dayStarts[d] = start;
+                        }
+                    }
+                }
+            
+                // invert the start times
+                const totalLate = Object.values(dayStarts)
+                    .map(s => (24 * 60 - s))
+                    .reduce((a, b) => a + b, 0);
+            
+                score += totalLate * 50;  // lower = better
             }
+
 
 
             /* DAY OFF PREF */
