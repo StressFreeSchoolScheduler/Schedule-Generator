@@ -185,43 +185,6 @@
 
 
 /* ============================================================
-   BUTTON SELECTIONS
-============================================================ */
-let selections = {
-    timePref: null,
-    endPref: null,
-    dayOff: null,
-    nightOff: null
-};
-
-function selectOption(group, value) {
-    selections[group] = value;
-
-    const buttons = document.querySelectorAll(`#${group} button`);
-    buttons.forEach(btn => btn.classList.remove("active"));
-
-    document.getElementById(value).classList.add("active");
-}
-    
-document.getElementById("clearFiltersBtn").addEventListener("click", () => {
-    // Reset selections object
-    selections = {
-        timePref: null,
-        endPref: null,
-        dayOff: null,
-        nightOff: null
-    };
-
-    // Remove "active" class from ALL filter buttons
-    document.querySelectorAll("button.active").forEach(btn => {
-        btn.classList.remove("active");
-    });
-
-    // Optional: Clear results area
-    document.getElementById("results").innerHTML = "<p>Filters cleared. Choose new preferences.</p>";
-});
-    
-/* ============================================================
    CLEAN FILTER SYSTEM
 ============================================================ */
 
@@ -263,13 +226,6 @@ document.getElementById("clearFiltersBtn").addEventListener("click", () => {
     document.getElementById("results").innerHTML = "<p>Filters cleared. Choose new preferences.</p>";
 });
 
-        // Add selected to clicked button
-        btn.classList.add("selected");
-
-        // Update selections
-        selections[group] = value;
-    });
-});
 
 
 /* ============================================================
