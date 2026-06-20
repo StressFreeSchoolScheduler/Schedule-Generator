@@ -463,17 +463,17 @@ function rankSchedules(schedules, prefs) {
 
             /* TIME OF DAY PREF */
             if (prefs.timePref === "early") {
-                score += earliest_start * 2;
+                score += earliest_start * 200;
             } else if (prefs.timePref === "late") {
-                score += (24 * 60 - earliest_start);
+                score += (24 * 60 - earliest_start) * 200;
+            }
+            
+            if (prefs.endPref === "earlyEnd") {
+                score += latest_end * 200;
+            } else if (prefs.endPref === "lateEnd") {
+                score += (24 * 60 - latest_end) * 200;
             }
 
-            /* END TIME PREF */
-            if (prefs.endPref === "earlyEnd") {
-                score += latest_end * 2;
-            } else if (prefs.endPref === "lateEnd") {
-                score += (24 * 60 - latest_end);
-            }
 
             /* DAY OFF PREF */
             if (prefs.dayOff) {
