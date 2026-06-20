@@ -221,16 +221,47 @@ document.getElementById("clearFiltersBtn").addEventListener("click", () => {
     document.getElementById("results").innerHTML = "<p>Filters cleared. Choose new preferences.</p>";
 });
     
-document.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const group = btn.dataset.group;
-        const value = btn.dataset.value;
+/* ============================================================
+   CLEAN FILTER SYSTEM
+============================================================ */
 
-        // Remove selected from all buttons in this group
-        document.querySelectorAll("button.active").forEach(btn => {
-            btn.classList.remove("active");
-        });
+// Make selections mutable
+let selections = {
+    timePref: null,
+    endPref: null,
+    dayOff: null,
+    nightOff: null
+};
 
+// Clean, unified selection handler
+function selectOption(group, value) {
+    // Update internal state
+    selections[group] = value;
+
+    // Remove active class from all buttons in this group
+    const buttons = document.querySelectorAll(`#${group} button`);
+    buttons.forEach(btn => btn.classList.remove("active"));
+
+    // Add active class to the selected button
+    document.getElementById(value).classList.add("active");
+}
+
+// Clean Clear Filters button
+document.getElementById("clearFiltersBtn").addEventListener("click", () => {
+    // Reset internal state
+    selections.timePref = null;
+    selections.endPref = null;
+    selections.dayOff = null;
+    selections.nightOff = null;
+
+    // Remove active class from ALL buttons
+    document.querySelectorAll("button.active").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    // Optional: Clear results area
+    document.getElementById("results").innerHTML = "<p>Filters cleared. Choose new preferences.</p>";
+});
 
         // Add selected to clicked button
         btn.classList.add("selected");
