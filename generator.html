@@ -414,6 +414,9 @@ function generateAllSchedules(courses) {
     return valid;
 }
 
+/* ============================================================
+    Ranking
+============================================================ */
 function rankSchedules(schedules, prefs) {
     return schedules
         .map(sched => {
@@ -426,11 +429,13 @@ function rankSchedules(schedules, prefs) {
             }
             events.sort((a, b) => tmin(a.start) - tmin(b.start));
 
+            // ⭐ THIS WAS MISSING — critical
+            const latest_end = Math.max(...events.map(e => tmin(e.end)));
+
             /* ============================================================
                TIME OF DAY PREF (EARLY / LATE)
             ============================================================ */
             if (prefs.timePref === "early") {
-                // reward early starts on ALL days
                 const dayStarts = {};
 
                 for (let e of events) {
@@ -443,11 +448,10 @@ function rankSchedules(schedules, prefs) {
                 }
 
                 const totalStart = Object.values(dayStarts).reduce((a, b) => a + b, 0);
-                score += totalStart * 50; // lower = better
+                score += totalStart * 50;
             }
 
             else if (prefs.timePref === "late") {
-                // reward late starts on ALL days
                 const dayStarts = {};
 
                 for (let e of events) {
@@ -461,7 +465,6 @@ function rankSchedules(schedules, prefs) {
 
                 const totalStart = Object.values(dayStarts).reduce((a, b) => a + b, 0);
 
-                // late = higher start times = better
                 score += (100000 - totalStart * 50);
             }
 
