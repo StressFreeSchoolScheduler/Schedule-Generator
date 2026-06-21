@@ -452,7 +452,19 @@ function rankSchedules(schedules, prefs) {
                 if (lec) events.push(lec);
                 if (lab) events.push(lab);
             }
-            events.sort((a, b) => tmin(a.start) - tmin(b.start));
+            // Compute latest end time per day
+            const dayEnds = {};
+            for (let e of events) {
+                for (let d of e.days) {
+                    const end = tmin(e.end);
+                    if (!dayEnds[d] || end > dayEnds[d]) {
+                        dayEnds[d] = end;
+                    }
+                }
+            }
+            
+            const totalEnd = Object.values(dayEnds).reduce((a, b) => a + b, 0) || 0;
+
 
             const earliest_start = tmin(events[0].start);
             const latest_end = Math.max(...events.map(e => tmin(e.end))) || 0;
@@ -496,10 +508,12 @@ function rankSchedules(schedules, prefs) {
                END TIME PREF
             ============================================================ */
             if (prefs.endPref === "earlyEnd") {
-                score += latest_end * 5;
-            } 
+                // Lower totalEnd = better
+                score += totalEnd * 15;
+            }
             else if (prefs.endPref === "lateEnd") {
-                score += (20000 - latest_end * 5);
+                // Higher totalEnd = better
+                score += (200000 - totalEnd * 15);
             }
 
             /* ============================================================
