@@ -417,6 +417,31 @@ function generateAllSchedules(courses) {
 /* ============================================================
     Ranking
 ============================================================ */
+function baseScore(sched) {
+    let events = [];
+    for (let [_, lec, lab] of sched) {
+        if (lec) events.push(lec);
+        if (lab) events.push(lab);
+    }
+
+    if (events.length === 0) return 9999999; // avoid crashes
+
+    events.sort((a, b) => tmin(a.start) - tmin(b.start));
+
+    const earliest_start = tmin(events[0].start);
+    const latest_end = Math.max(...events.map(e => tmin(e.end)));
+
+    let gaps = 0;
+    for (let i = 0; i < events.length - 1; i++) {
+        const end1 = tmin(events[i].end);
+        const start2 = tmin(events[i + 1].start);
+        if (start2 > end1) {
+            gaps += (start2 - end1);
+        }
+    }
+
+    return earliest_start * 10 + latest_end * 5 + gaps;
+}
 function rankSchedules(schedules, prefs) {
     return schedules
         .map(sched => {
