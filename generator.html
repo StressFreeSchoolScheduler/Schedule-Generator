@@ -458,7 +458,7 @@ function rankSchedules(schedules, prefs) {
                 for (let e of events) {
                     for (let d of e.days) {
                         const start = tmin(e.start);
-                        if (!dayStarts[d] || start < dayStarts[d]) {
+                        if (!dayStarts[d] || start > dayStarts[d]) {
                             dayStarts[d] = start;
                         }
                     }
