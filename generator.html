@@ -429,7 +429,6 @@ function rankSchedules(schedules, prefs) {
             }
             events.sort((a, b) => tmin(a.start) - tmin(b.start));
 
-            // ⭐ REQUIRED: earliest and latest times
             const earliest_start = tmin(events[0].start);
             const latest_end = Math.max(...events.map(e => tmin(e.end)));
 
@@ -449,7 +448,7 @@ function rankSchedules(schedules, prefs) {
                 }
 
                 const totalStart = Object.values(dayStarts).reduce((a, b) => a + b, 0);
-                score += totalStart * 50; // lower = better
+                score += totalStart * 20;   // ⭐ tuned weight
             }
 
             else if (prefs.timePref === "late") {
@@ -465,19 +464,17 @@ function rankSchedules(schedules, prefs) {
                 }
 
                 const totalStart = Object.values(dayStarts).reduce((a, b) => a + b, 0);
-
-                // late = higher start times = better
-                score += (100000 - totalStart * 50);
+                score += (20000 - totalStart * 20);   // ⭐ tuned weight
             }
 
             /* ============================================================
                END TIME PREF
             ============================================================ */
             if (prefs.endPref === "earlyEnd") {
-                score += latest_end * 200;
+                score += latest_end * 5;   // ⭐ weaker than start time
             } 
             else if (prefs.endPref === "lateEnd") {
-                score += (100000 - latest_end * 200);
+                score += (20000 - latest_end * 5);
             }
 
             /* ============================================================
@@ -494,7 +491,7 @@ function rankSchedules(schedules, prefs) {
                 const target = dayMap[prefs.dayOff];
                 let hasClassThatDay = events.some(e => e.days.includes(target));
                 if (hasClassThatDay) {
-                    score += 500;
+                    score += 20000;   // ⭐ strongest preference
                 }
             }
 
@@ -514,7 +511,7 @@ function rankSchedules(schedules, prefs) {
                     e.days.includes(targetNight) && tmin(e.end) >= 18 * 60
                 );
                 if (hasNightClass) {
-                    score += 500;
+                    score += 8000;   // ⭐ medium preference
                 }
             }
 
