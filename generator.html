@@ -414,38 +414,6 @@ function generateAllSchedules(courses) {
     return valid;
 }
 
-/* ============================================================
-   RANKING (converted from Python + preferences)
-============================================================ */
-function baseScore(sched) {
-    let events = [];
-    for (let [_, lec, lab] of sched) {
-        if (lec) events.push(lec);
-        if (lab) events.push(lab);
-    }
-
-    events.sort((a, b) => tmin(a.start) - tmin(b.start));
-
-    const earliest_start = tmin(events[0].start);
-    const latest_end = Math.max(...events.map(e => tmin(e.end)));
-
-    let gaps = 0;
-    for (let i = 0; i < events.length - 1; i++) {
-        const end1 = tmin(events[i].end);
-        const start2 = tmin(events[i + 1].start);
-        if (start2 > end1) {
-            gaps += (start2 - end1);
-        }
-    }
-
-    return (
-        earliest_start * 10 +
-        latest_end * 5 +
-        gaps
-    );
-}
-
-
 function rankSchedules(schedules, prefs) {
     return schedules
         .map(sched => {
@@ -458,13 +426,13 @@ function rankSchedules(schedules, prefs) {
             }
             events.sort((a, b) => tmin(a.start) - tmin(b.start));
 
-            const earliest_start = tmin(events[0].start);
-            const latest_end = Math.max(...events.map(e => tmin(e.end)));
-
-            else if (prefs.timePref === "late") {
-                // reward late starts on ALL days
+            /* ============================================================
+               TIME OF DAY PREF (EARLY / LATE)
+            ============================================================ */
+            if (prefs.timePref === "early") {
+                // reward early starts on ALL days
                 const dayStarts = {};
-            
+
                 for (let e of events) {
                     for (let d of e.days) {
                         const start = tmin(e.start);
@@ -473,15 +441,43 @@ function rankSchedules(schedules, prefs) {
                         }
                     }
                 }
-            
-                // lower score = better, so invert the logic
+
                 const totalStart = Object.values(dayStarts).reduce((a, b) => a + b, 0);
-            
+                score += totalStart * 50; // lower = better
+            }
+
+            else if (prefs.timePref === "late") {
+                // reward late starts on ALL days
+                const dayStarts = {};
+
+                for (let e of events) {
+                    for (let d of e.days) {
+                        const start = tmin(e.start);
+                        if (!dayStarts[d] || start < dayStarts[d]) {
+                            dayStarts[d] = start;
+                        }
+                    }
+                }
+
+                const totalStart = Object.values(dayStarts).reduce((a, b) => a + b, 0);
+
                 // late = higher start times = better
                 score += (100000 - totalStart * 50);
             }
 
-            /* DAY OFF PREF */
+            /* ============================================================
+               END TIME PREF
+            ============================================================ */
+            if (prefs.endPref === "earlyEnd") {
+                score += latest_end * 200;
+            } 
+            else if (prefs.endPref === "lateEnd") {
+                score += (100000 - latest_end * 200);
+            }
+
+            /* ============================================================
+               DAY OFF PREF
+            ============================================================ */
             if (prefs.dayOff) {
                 const dayMap = {
                     monday: "Mon",
@@ -497,7 +493,9 @@ function rankSchedules(schedules, prefs) {
                 }
             }
 
-            /* NIGHT OFF PREF */
+            /* ============================================================
+               NIGHT OFF PREF
+            ============================================================ */
             if (prefs.nightOff) {
                 const nightMap = {
                     mondayNight: "Mon",
@@ -520,6 +518,7 @@ function rankSchedules(schedules, prefs) {
         .sort((a, b) => a.score - b.score)
         .map(x => x.sched);
 }
+
 
 
 /* ============================================================
