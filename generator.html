@@ -560,7 +560,7 @@ function rankSchedules(schedules, prefs) {
             if (prefs.nightOff === "fewestDays") {
                 // Reward schedules that use fewer days
                 const missingDays = 5 - numDaysUsed;
-                score -= missingDays * 12000;  // strong reward
+                score -= missingDays * 30000;  // strong reward
             }
             
             /* ============================================================
