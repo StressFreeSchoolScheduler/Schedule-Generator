@@ -570,21 +570,13 @@ function rankSchedules(schedules, prefs) {
                 const missingDays = 5 - numDaysUsed;
                 score -= missingDays * 100000;  // strong reward
             }
-            
-            /* ============================================================
-               PENALTY FOR FEWER DAYS (unless user asked for a day off)
-            ============================================================ */
-            if (!prefs.dayOff) {
-                const missingDays = 5 - numDaysUsed;
-                score += missingDays * 10000;
-            }
 
             /* ============================================================
                WEEK STRUCTURE: COMPACT WEEK (FEWEST DAYS)
             ============================================================ */
             if (prefs.weekStructure === "compact") {
                 const missingDays = 5 - numDaysUsed;
-                score -= missingDays * 30000;  // strong reward
+                score -= missingDays * 100000;  // strong reward
             }
 
             /* ============================================================
