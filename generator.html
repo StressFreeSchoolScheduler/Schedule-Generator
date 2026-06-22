@@ -414,34 +414,6 @@ function generateAllSchedules(courses) {
     return valid;
 }
 
-/* ============================================================
-    Ranking
-============================================================ */
-function baseScore(sched) {
-    let events = [];
-    for (let [_, lec, lab] of sched) {
-        if (lec) events.push(lec);
-        if (lab) events.push(lab);
-    }
-
-    if (events.length === 0) return 9999999; // avoid crashes
-
-    events.sort((a, b) => tmin(a.start) - tmin(b.start));
-
-    const earliest_start = tmin(events[0].start);
-    const latest_end = Math.max(...events.map(e => tmin(e.end)));
-
-    let gaps = 0;
-    for (let i = 0; i < events.length - 1; i++) {
-        const end1 = tmin(events[i].end);
-        const start2 = tmin(events[i + 1].start);
-        if (start2 > end1) {
-            gaps += (start2 - end1);
-        }
-    }
-
-    return earliest_start * 10 + latest_end * 5 + gaps;
-}
 function rankSchedules(schedules, prefs) {
     return schedules
         .map(sched => {
@@ -452,6 +424,16 @@ function rankSchedules(schedules, prefs) {
                 if (lec) events.push(lec);
                 if (lab) events.push(lab);
             }
+
+            // Count how many days have classes
+            const daysUsed = new Set();
+            for (let e of events) {
+                for (let d of e.days) {
+                    daysUsed.add(d);
+                }
+            }
+            const numDaysUsed = daysUsed.size;
+
             // Compute latest end time per day
             const dayEnds = {};
             for (let e of events) {
@@ -462,19 +444,13 @@ function rankSchedules(schedules, prefs) {
                     }
                 }
             }
-            
             const totalEnd = Object.values(dayEnds).reduce((a, b) => a + b, 0) || 0;
-
-
-            const earliest_start = tmin(events[0].start);
-            const latest_end = Math.max(...events.map(e => tmin(e.end))) || 0;
 
             /* ============================================================
                TIME OF DAY PREF (EARLY / LATE)
             ============================================================ */
             if (prefs.timePref === "early") {
                 const dayStarts = {};
-
                 for (let e of events) {
                     for (let d of e.days) {
                         const start = tmin(e.start);
@@ -483,14 +459,12 @@ function rankSchedules(schedules, prefs) {
                         }
                     }
                 }
-
                 const totalStart = Object.values(dayStarts).reduce((a, b) => a + b, 0) || 0;
                 score += totalStart * 20;
             }
 
             else if (prefs.timePref === "late") {
                 const dayStarts = {};
-
                 for (let e of events) {
                     for (let d of e.days) {
                         const start = tmin(e.start);
@@ -499,7 +473,6 @@ function rankSchedules(schedules, prefs) {
                         }
                     }
                 }
-
                 const totalStart = Object.values(dayStarts).reduce((a, b) => a + b, 0) || 0;
                 score += (20000 - totalStart * 20);
             }
@@ -508,11 +481,9 @@ function rankSchedules(schedules, prefs) {
                END TIME PREF
             ============================================================ */
             if (prefs.endPref === "earlyEnd") {
-                // Lower totalEnd = better
                 score += totalEnd * 15;
             }
             else if (prefs.endPref === "lateEnd") {
-                // Higher totalEnd = better
                 score += (200000 - totalEnd * 15);
             }
 
@@ -553,6 +524,7 @@ function rankSchedules(schedules, prefs) {
                     score += 8000;
                 }
             }
+
             /* ============================================================
                PENALTY FOR FEWER DAYS (unless user asked for a day off)
             ============================================================ */
@@ -566,6 +538,7 @@ function rankSchedules(schedules, prefs) {
         .sort((a, b) => a.score - b.score)
         .map(x => x.sched);
 }
+
 
 /* ============================================================
    Draw Timetable
