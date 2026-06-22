@@ -163,6 +163,9 @@
     <div class="section">
         <h2>Choose a Night Off (Optional)</h2>
         <div class="btn-group" id="nightOff">
+        <p style="font-size:14px; color:#666; margin-top:6px;">
+            Note: Night off only applies when possible. Results may vary depending on your other selected filters.
+        </p>
             <button onclick="selectOption('nightOff','mondayNight')" id="mondayNight">Monday Night</button>
             <button onclick="selectOption('nightOff','tuesdayNight')" id="tuesdayNight">Tuesday Night</button>
             <button onclick="selectOption('nightOff','wednesdayNight')" id="wednesdayNight">Wednesday Night</button>
@@ -173,6 +176,12 @@
     <div class="section">
         <h3>Week Structure (Optional)</h3>
         <div class="btn-group" id="weekStructure">
+        <p style="font-size:14px; color:#666; margin-top:6px;">
+            Compact Week: Tries to use the fewest days possible. Works only if your classes allow it.
+        </p>
+        <p style="font-size:14px; color:#666; margin-top:4px;">
+            Balanced Week: Tries to avoid overloaded days and spread classes more evenly.
+        </p>
             <button onclick="selectOption('weekStructure','compact')" id="compact">Compact Week</button>
             <button onclick="selectOption('weekStructure','balanced')" id="balanced">Balanced Week</button>
             <button onclick="selectOption('weekStructure','random')" id="random">Random Schedule</button>
@@ -189,8 +198,6 @@
 </div>
 
 <script>
-
-
 
 /* ============================================================
    CLEAN FILTER SYSTEM
