@@ -157,6 +157,7 @@
             <button onclick="selectOption('dayOff','wednesday')" id="wednesday">Wednesday</button>
             <button onclick="selectOption('dayOff','thursday')" id="thursday">Thursday</button>
             <button onclick="selectOption('dayOff','friday')" id="friday">Friday</button>
+            <button onclick="selectOption('nightOff','fewestDays')" id="fewestDays">Fewest Days Possible</button>
         </div>
     </div>
 
@@ -552,7 +553,16 @@ function rankSchedules(schedules, prefs) {
                     score += 8000;
                 }
             }
-
+            
+            /* ============================================================
+               FEWEST DAYS POSSIBLE (compact week)
+            ============================================================ */
+            if (prefs.nightOff === "fewestDays") {
+                // Reward schedules that use fewer days
+                const missingDays = 5 - numDaysUsed;
+                score -= missingDays * 12000;  // strong reward
+            }
+            
             /* ============================================================
                PENALTY FOR FEWER DAYS (unless user asked for a day off)
             ============================================================ */
