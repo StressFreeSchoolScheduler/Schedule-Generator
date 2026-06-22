@@ -563,15 +563,6 @@ function rankSchedules(schedules, prefs) {
             }
             
             /* ============================================================
-               FEWEST DAYS POSSIBLE (compact week)
-            ============================================================ */
-            if (prefs.nightOff === "fewestDays") {
-                // Reward schedules that use fewer days
-                const missingDays = 5 - numDaysUsed;
-                score -= missingDays * 100000;  // strong reward
-            }
-
-            /* ============================================================
                WEEK STRUCTURE: COMPACT WEEK (FEWEST DAYS)
             ============================================================ */
             if (prefs.weekStructure === "compact") {
