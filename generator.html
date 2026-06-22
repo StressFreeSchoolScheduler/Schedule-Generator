@@ -172,7 +172,8 @@
             <button onclick="selectOption('nightOff','thursdayNight')" id="thursdayNight">Thursday Night</button>
             <button onclick="selectOption('nightOff','fridayNight')" id="fridayNight">Friday Night</button>
         </div>
-        
+    </div>
+    
     <div class="section">
         <h3>Week Structure (Optional)</h3>
         <div class="btn-group" id="weekStructure">
@@ -246,7 +247,7 @@ document.getElementById("clearFiltersBtn").addEventListener("click", () => {
 
 
 /* ============================================================
-   PARSE COURSES (converted from Python)
+   UNIVERSAL NORTH-AMERICAN COURSE PARSER
 ============================================================ */
 function parseCourses() {
     const raw = document.getElementById("courseInput").value;
@@ -264,54 +265,150 @@ function parseCourses() {
         line = line.replace(/\t/g, " ");
         line = line.replace(/\s+/g, " ").trim();
         line = line.replace(/\s+\d\.\d{2}\s+Click here.*$/, "");
-
         if (line.length > 0) cleaned.push(line);
     }
 
-    const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    /* ============================================================
+       DAY MAPPINGS (Canada + US)
+    ============================================================ */
+    const DAY_MAP = {
+        "Mon": "Mon", "M": "Mon",
+        "Tue": "Tue", "T": "Tue",
+        "Wed": "Wed", "W": "Wed",
+        "Thu": "Thu", "R": "Thu",
+        "Fri": "Fri", "F": "Fri"
+    };
+
+    const COMPRESSED_DAY_PATTERNS = [
+        ["MWF", ["Mon", "Wed", "Fri"]],
+        ["TR", ["Tue", "Thu"]],
+        ["MTWRF", ["Mon", "Tue", "Wed", "Thu", "Fri"]],
+        ["MW", ["Mon", "Wed"]],
+        ["WF", ["Wed", "Fri"]],
+        ["MR", ["Mon", "Thu"]],
+        ["TF", ["Tue", "Fri"]]
+    ];
+
     let courses = {};
 
-    for (let line of cleaned) {
-        const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*)/);
-        if (!m) continue;
+for (let line of cleaned) {
 
-        const [_, crn, subj, num, sec, rest] = m;
-        const code = subj + num;
+    const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*)/);
+    if (!m) continue;
 
-        let day_list = [];
-        for (let wd of WEEKDAYS) {
-            let idx = rest.indexOf(wd);
-            while (idx !== -1) {
-                day_list.push([idx, wd]);
-                idx = rest.indexOf(wd, idx + 1);
-            }
-        }
+    const [_, crn, subj, num, sec, rest] = m;
+    const code = subj + num;
 
-        day_list.sort((a, b) => a[0] - b[0]);
-        day_list = day_list.map(x => x[1]);
+    /* ============================================================
+       DETECT ASYNC FIRST (before day parsing)
+    ============================================================ */
+    const asyncKeywords = ["ASYNC", "ASYNCH", "ONLINE", "WEB", "TBA", "NO SCHEDULE", "DISTANCE"];
+    let isAsync = asyncKeywords.some(k => rest.toUpperCase().includes(k));
 
-        if (day_list.length === 0) continue;
-
-        const timeMatch = rest.match(/(\d{2}:\d{2}).*?(\d{2}:\d{2})/);
-        if (!timeMatch) continue;
-
-        const start = timeMatch[1];
-        const end = timeMatch[2];
-
+    if (isAsync) {
         if (!courses[code]) courses[code] = { lecture: [], lab: [] };
 
-        const entry = { course: code, section: sec, days: day_list, start, end };
+        const entry = {
+            course: code,
+            section: sec,
+            days: [],
+            start: null,
+            end: null,
+            async: true
+        };
 
         if (sec.startsWith("L") || sec.endsWith("T")) {
             courses[code].lab.push(entry);
         } else {
             courses[code].lecture.push(entry);
         }
+
+        continue; // async handled, skip normal parsing
     }
+
+    /* ============================================================
+       EXTRACT DAYS (only for non-async)
+    ============================================================ */
+    let day_list = [];
+
+    for (let [pattern, expanded] of COMPRESSED_DAY_PATTERNS) {
+        if (rest.includes(pattern)) day_list.push(...expanded);
+    }
+
+    for (let full of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
+        if (rest.includes(full)) day_list.push(full);
+    }
+
+    for (let letter of ["M", "T", "W", "R", "F"]) {
+        if (rest.includes(letter) && !/[A-Z]{2,}/.test(letter)) {
+            day_list.push(DAY_MAP[letter]);
+        }
+    }
+
+    day_list = [...new Set(day_list)];
+    if (day_list.length === 0) continue;
+
+    /* ============================================================
+       EXTRACT TIMES
+    ============================================================ */
+    let timeMatch = rest.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
+    if (!timeMatch) {
+        timeMatch = rest.match(/(\d{1,2}:\d{2}\s*[APMapm]{2})\s*[-–]\s*(\d{1,2}:\d{2}\s*[APMapm]{2})/);
+    }
+    if (!timeMatch) {
+        timeMatch = rest.match(/(\d{1,2}(?::\d{2})?\s*[APMapm]{2})\s*[-–]\s*(\d{1,2}(?::\d{2})?\s*[APMapm]{2})/);
+    }
+    if (!timeMatch) continue;
+
+    let start = normalizeTime(timeMatch[1]);
+    let end = normalizeTime(timeMatch[2]);
+
+    if (!courses[code]) courses[code] = { lecture: [], lab: [] };
+
+    const entry = { course: code, section: sec, days: day_list, start, end };
+
+    if (sec.startsWith("L") || sec.endsWith("T")) {
+        courses[code].lab.push(entry);
+    } else {
+        courses[code].lecture.push(entry);
+    }
+}
+
 
     window.courses = courses;
     alert("Courses loaded successfully!");
 }
+
+/* ============================================================
+   NORMALIZE TIME (AM/PM → 24h → HH:MM)
+============================================================ */
+function normalizeTime(t) {
+    t = t.trim().toUpperCase();
+
+    // If already 24-hour (13:00)
+    if (/^\d{1,2}:\d{2}$/.test(t)) return t;
+
+    // If AM/PM without minutes (e.g., "1PM")
+    if (/^\d{1,2}[AP]M$/.test(t)) {
+        let h = parseInt(t);
+        if (t.includes("PM") && h !== 12) h += 12;
+        if (t.includes("AM") && h === 12) h = 0;
+        return `${String(h).padStart(2,"0")}:00`;
+    }
+
+    // AM/PM with minutes (e.g., "1:30PM")
+    const m = t.match(/(\d{1,2}):(\d{2})(AM|PM)/);
+    if (m) {
+        let [_, h, min, ap] = m;
+        h = parseInt(h);
+        if (ap === "PM" && h !== 12) h += 12;
+        if (ap === "AM" && h === 12) h = 0;
+        return `${String(h).padStart(2,"0")}:${min}`;
+    }
+
+    return t; // fallback
+}
+
 
 /* ============================================================
    TIME HELPERS + OVERLAP
@@ -658,6 +755,7 @@ function drawTimetable(container, events) {
 
     /* Class blocks */
     events.forEach((ev, idx) => {
+        if (ev.async) return; // skip async classes
         ev.days.forEach(day => {
             const dIndex = days.indexOf(day);
             if (dIndex === -1) return;
@@ -767,8 +865,9 @@ function checkImpossiblePreferences(courses, prefs) {
         const d = courses[code];
         const allEvents = [...d.lecture, ...d.lab];
 
-        const everySectionUsesDay = allEvents.every(e => e.days.includes(target));
-
+        const everySectionUsesDay = allEvents.every(e =>
+            !e.async && e.days.includes(target)
+        );
         if (everySectionUsesDay) {
             return `It is impossible to avoid ${target} because ${code} only runs on that day.`;
         }
@@ -798,6 +897,7 @@ function checkNoScheduleCanAvoidDay(schedules, prefs) {
         }
 
         const hasClassThatDay = events.some(e => e.days.includes(target));
+
         if (!hasClassThatDay) {
             return null; // Found a schedule that avoids the day
         }
