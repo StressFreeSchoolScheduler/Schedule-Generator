@@ -553,6 +553,13 @@ function rankSchedules(schedules, prefs) {
                     score += 8000;
                 }
             }
+            /* ============================================================
+               PENALTY FOR FEWER DAYS (unless user asked for a day off)
+            ============================================================ */
+            if (!prefs.dayOff) {
+                const missingDays = 5 - numDaysUsed;
+                score += missingDays * 3000;
+            }
 
             return { sched, score };
         })
@@ -688,6 +695,14 @@ function displaySchedules(schedules) {
         container.appendChild(wrapper);
     });
 }
+// Count how many days have classes
+const daysUsed = new Set();
+for (let e of events) {
+    for (let d of e.days) {
+        daysUsed.add(d);
+    }
+}
+const numDaysUsed = daysUsed.size;
 
 /* ============================================================
    Check impossible Preferences
