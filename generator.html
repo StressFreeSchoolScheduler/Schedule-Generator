@@ -263,6 +263,7 @@ function parseCourses() {
     for (let line of lines) {
         line = line.replace("On Your Worksheet", "");
         line = line.replace(/\t/g, " ");
+        line = line.replace(/\s+to\s+/i, " - ");
         line = line.replace(/\s+/g, " ").trim();
         line = line.replace(/\s+\d\.\d{2}\s+Click here.*$/, "");
         if (line.length > 0) cleaned.push(line);
@@ -302,7 +303,14 @@ for (let line of cleaned) {
     /* ============================================================
        DETECT ASYNC FIRST (before day parsing)
     ============================================================ */
-    const asyncKeywords = ["ASYNC", "ASYNCH", "ONLINE", "WEB", "TBA", "NO SCHEDULE", "DISTANCE"];
+    const asyncKeywords = [
+        "ASYNC",
+        "ASYNCH",
+        "ONLINE",
+        "DISTANCE",
+        "NO SCHEDULE",
+        "TBA"
+    ];
     let isAsync = asyncKeywords.some(k => rest.toUpperCase().includes(k));
 
     if (isAsync) {
@@ -419,6 +427,9 @@ function tmin(t) {
 }
 
 function overlap(a, b) {
+    // ⭐ Skip async classes — they never overlap
+    if (a.async || b.async) return false;
+    
     const daysA = new Set(a.days);
     const daysB = new Set(b.days);
     let shareDay = false;
