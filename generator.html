@@ -757,34 +757,51 @@ function drawTimetable(container, events) {
     }
 
     /* Colors */
-    const colors = ["#4a6cf7", "#e67e22", "#16a085", "#8e44ad", "#c0392b"];
+    const colors = [
+        "#4a6cf7", "#e67e22", "#16a085", "#8e44ad", "#c0392b",
+        "#f39c12", "#1abc9c", "#9b59b6", "#d35400", "#2ecc71",
+        "#3498db", "#e74c3c", "#27ae60", "#8e44ad", "#2980b9"
+    ];
+
+/* Assign unique colours */
+const courseColors = {};
+let colorIndex = 0;
+
+events.forEach(ev => {
+    if (!courseColors[ev.course]) {
+        courseColors[ev.course] = colors[colorIndex % colors.length];
+        colorIndex++;
+    }
+});
 
     /* Class blocks */
-    events.forEach((ev, idx) => {
-        if (ev.async) return; // skip async classes
+    events.forEach((ev) => {
+        if (ev.async) return;
+    
         ev.days.forEach(day => {
             const dIndex = days.indexOf(day);
             if (dIndex === -1) return;
-
+    
             const block = document.createElement("div");
             block.className = "class-block";
-            block.style.background = colors[idx % colors.length];
-
+            block.style.background = courseColors[ev.course];
+    
             const start = tmin(ev.start);
             const end = tmin(ev.end);
-
+    
             const startRow = Math.floor((start - startHour * 60) / 5) + 2;
             const endRow = Math.floor((end - startHour * 60) / 5) + 2;
-
+    
             block.style.gridColumn = dIndex + 2;
             block.style.gridRow = `${startRow} / ${endRow}`;
-
+    
             block.innerHTML =
                 `<strong>${ev.course}</strong><br>${ev.section}<br>${ev.start}–${ev.end}`;
-
+    
             container.appendChild(block);
         });
     });
+
 }
 
 /* ============================================================
