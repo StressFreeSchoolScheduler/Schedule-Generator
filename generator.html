@@ -805,7 +805,8 @@ events.forEach(ev => {
             block.style.gridRow = `${startRow} / ${endRow}`;
     
             block.innerHTML =
-                `<strong>${ev.course}</strong><br>${ev.section}<br>${ev.start}–${ev.end}`;
+                `<strong>${ev.fullName}</strong><br>${ev.course} ${ev.section}<br>${ev.start}–${ev.end}`;
+
     
             container.appendChild(block);
         });
