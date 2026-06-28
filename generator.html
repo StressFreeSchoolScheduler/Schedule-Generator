@@ -300,6 +300,8 @@ for (let line of cleaned) {
     const [_, crn, subj, num, sec, rest] = m;
     const code = subj + num;
 
+    let fullName = rest.split(/ Mon| Tue| Wed| Thu| Fri/)[0].trim();
+
     /* ============================================================
        DETECT ASYNC FIRST (before day parsing)
     ============================================================ */
@@ -368,7 +370,14 @@ for (let line of cleaned) {
 
     if (!courses[code]) courses[code] = { lecture: [], lab: [] };
 
-    const entry = { course: code, section: sec, days: day_list, start, end };
+    const entry = { 
+        course: code,
+        section: sec,
+        fullName,   // ⭐ add this
+        days: day_list,
+        start,
+        end
+    };
 
     if (sec.startsWith("L") || sec.endsWith("T")) {
         courses[code].lab.push(entry);
