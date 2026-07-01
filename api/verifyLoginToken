@@ -1,0 +1,18 @@
+import { db } from "../../lib/db";
+
+export default async function handler(req, res) {
+  const { token } = req.query;
+
+  const user = await db.users.findOne({ login_token: token });
+
+  if (!user) return res.status(403).json({ error: "Invalid token" });
+  if (Date.now() > user.token_expiry) return res.status(403).json({ error: "Expired token" });
+
+  // Clear token
+  await db.users.update({ email: user.email }, { login_token: null });
+
+  // Create session cookie
+  res.setHeader("Set-Cookie", `session=${user.email}; Path=/; HttpOnly; Max-Age=604800`);
+
+  res.redirect("/generator.html");
+}
