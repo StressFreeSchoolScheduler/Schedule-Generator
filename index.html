@@ -128,16 +128,6 @@
         No subscriptions. No extra fees. Just instant schedules forever.
     </p>
 
-    <script>
-    async function buyNow() {
-      const email = document.getElementById("email").value;
-    
-      const res = await fetch(`api/createCheckout.js?email=${email}`);
-      const data = await res.json();
-    
-      window.location.href = data.url;
-    }
-    </script>
     <input 
       type="email" 
       id="email" 
@@ -145,7 +135,24 @@
       required
       style="padding: 12px; font-size: 16px; width: 260px; margin-bottom: 20px; border-radius: 6px; border: 1px solid #ccc;"
     >
+
     <button onclick="buyNow()">Buy Now</button>
+
+    <a href="https://billing.stripe.com/p/login/9B63cnbBs45s5cDeEn0co00" class="btn">
+        Already have an Account? Sign in Here
+    </a>
+</header>
+
+<script>
+async function buyNow() {
+  const email = document.getElementById("email").value;
+
+  const res = await fetch(`/api/createCheckout?email=${email}`);
+  const data = await res.json();
+
+  window.location.href = data.url;
+}
+</script>
 
     <!-- LOGIN BUTTON -->
     <a href="https://billing.stripe.com/p/login/9B63cnbBs45s5cDeEn0co00" class="btn">
