@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       }
     ],
     customer_email: email,   // ⭐ THIS FIXES EVERYTHING ⭐
-    success_url: "https://schedule-generator-lake.vercel.app/welcome.html",
+    success_url: "https://schedule-generator-lake.vercel.app/welcome.html?session_id={CHECKOUT_SESSION_ID}",
     cancel_url: "https://schedule-generator-lake.vercel.app/cancel.html"
   });
 
