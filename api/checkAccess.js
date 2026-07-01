@@ -11,6 +11,9 @@ export default async function handler(req, res) {
 
   const customers = await stripe.customers.list({ email });
 
+  // DEBUG LOGS
+  console.log("Customers:", customers.data);
+
   if (customers.data.length === 0) {
     return res.json({ access: false });
   }
@@ -21,6 +24,9 @@ export default async function handler(req, res) {
     customer: customerId,
     limit: 10
   });
+
+  // MORE DEBUG LOGS
+  console.log("Payments:", payments.data);
 
   const paid = payments.data.some(p => p.status === "succeeded");
 
