@@ -128,10 +128,18 @@
         No subscriptions. No extra fees. Just instant schedules forever.
     </p>
 
-    <!-- BUY BUTTON -->
-    <a href="https://buy.stripe.com/9B63cnbBs45s5cDeEn0co00" class="btn">
-        Buy Now for Only $5.00
-    </a>
+    <script>
+    async function buyNow() {
+      const email = document.getElementById("email").value;
+    
+      const res = await fetch(`/api/createCheckout?email=${email}`);
+      const data = await res.json();
+    
+      window.location.href = data.url;
+    }
+    </script>
+    
+    <button onclick="buyNow()">Buy Now</button>
 
     <!-- LOGIN BUTTON -->
     <a href="https://billing.stripe.com/p/login/9B63cnbBs45s5cDeEn0co00" class="btn">
