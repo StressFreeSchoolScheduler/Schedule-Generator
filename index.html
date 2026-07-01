@@ -147,7 +147,8 @@
 async function buyNow() {
   const email = document.getElementById("email").value;
 
-  const res = await fetch(`/api/createCheckout?email=${email}`);
+  const res = await fetch(`https://schedule-generator-lake.vercel.app/api/createCheckout?email=${email}`);
+
   const data = await res.json();
 
   window.location.href = data.url;
