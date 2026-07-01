@@ -24,6 +24,11 @@ export default async function handler(req, res) {
     const email = session.customer_details?.email || session.customer_email;
 
     if (paid && email) {
+      await db.users.upsert({
+        email,
+        stripe_customer_id: session.customer,
+        last_payment_status: "paid"
+      });
       return res.status(200).json({
         verified: true,
         email: email
