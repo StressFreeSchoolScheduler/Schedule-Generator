@@ -1,0 +1,30 @@
+import { Resend } from "resend";
+import { db } from "../../lib/db";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export default async function handler(req, res) {
+  const { email } = req.body;
+
+  const user = await db.users.findOne({ email });
+
+  if (!user || user.last_payment_status !== "paid") {
+    return res.status(403).json({ error: "No access" });
+  }
+
+  const token = crypto.randomUUID();
+  const expiry = Date.now() + 1000 * 60 * 15; // 15 minutes
+
+  await db.users.update({ email }, { login_token: token, token_expiry: expiry });
+
+  const link = `https://schedule-generator-lake.vercel.app/login.html?token=${token}`;
+
+  await resend.emails.send({
+    from: "login@mosaic-scheduler.com",
+    to: email,
+    subject: "Your Login Link",
+    html: `<p>Click to sign in:</p><a href="${link}">${link}</a>`
+  });
+
+  res.json({ sent: true });
+}
