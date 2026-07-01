@@ -147,7 +147,7 @@
 async function buyNow() {
   const email = document.getElementById("email").value;
 
-  const res = await fetch(`/api/createCheckout.js?email=${email}`);
+  const res = await fetch(`/api/createCheckout?email=${email}`);
   const data = await res.json();
 
   window.location.href = data.url;
