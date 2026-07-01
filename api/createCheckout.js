@@ -11,6 +11,7 @@ export default async function handler(req, res) {
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
+    customer_creation: "always",
     line_items: [
       {
         price: "price_1TiK511i6tcXVqRtXvh2SJj1",
