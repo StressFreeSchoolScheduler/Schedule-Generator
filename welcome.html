@@ -42,4 +42,84 @@
             color: white;
             font-size: 22px;
             font-weight: bold;
-            border-radius: 
+            border-radius: 10px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #3d5be0;
+        }
+
+        .secondary-link {
+            display: block;
+            margin-top: 25px;
+            font-size: 16px;
+            color: #4a6cf7;
+            text-decoration: none;
+            opacity: 0.8;
+        }
+
+        .secondary-link:hover {
+            opacity: 1;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Welcome!</h1>
+    <p>Your access is confirmed. You can now launch the Mosaic Schedule Generator.</p>
+
+    <!-- MAIN GENERATOR BUTTON -->
+    <a href="https://stressfreeschoolscheduler.github.io/Schedule-Generator/generator.html" class="btn-primary">
+        Open Schedule Generator
+    </a>
+
+    <!-- BILLING PORTAL LINK -->
+    <a href="https://billing.stripe.com/p/login/9B63cnbBs45s5cDeEn0co00" class="secondary-link">
+        Manage Billing & Payment Info
+    </a>
+</div>
+
+<footer>
+    © 2026 Mosaic Scheduler Pro
+</footer>
+
+<!-- ⭐ ADD THIS SCRIPT RIGHT HERE -->
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const sessionId = urlParams.get("session_id");
+
+  if (!sessionId) {
+    console.error("No session_id found in URL");
+  } else {
+    fetch("https://schedule-generator-lake.vercel.app/api/verifyPayment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log("Verification result:", data);
+
+      if (data.verified) {
+        document.body.innerHTML += "<p style='text-align:center;margin-top:20px;'>Payment verified. Full access unlocked.</p>";
+      } else {
+        document.body.innerHTML += "<p style='text-align:center;margin-top:20px;'>Payment not verified. You are a guest.</p>";
+      }
+    })
+    .catch(err => console.error("Error verifying payment:", err));
+  }
+</script>
+
+</body>
+</html>
