@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     mode: "payment",
     line_items: [
       {
-        price: "YOUR_PRICE_ID",
+        price: "price_1TiK511i6tcXVqRtXvh2SJj1",
         quantity: 1
       }
     ],
