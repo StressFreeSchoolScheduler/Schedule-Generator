@@ -176,7 +176,8 @@
     
     <!-- Blocked Time Button -->
     <button id="addBlockedTimeBtn">Add Blocked Time</button>
-    
+    <div id="blockedDisplay" style="margin-top:10px;"></div>
+
     <!-- Blocked Time Modal -->
     <div id="blockedModal" class="modal hidden">
       <div class="modal-content">
@@ -281,6 +282,8 @@ document.getElementById("saveBlockedTime").onclick = () => {
 
   selections.blockedTimes.push({ day, start, end });
 
+  updateBlockedDisplay();   // ⭐ THIS IS WHERE YOU MODIFY THE HANDLER
+
   blockedModal.classList.add("hidden");
 };
 
@@ -320,16 +323,47 @@ document.getElementById("clearFiltersBtn").addEventListener("click", () => {
     selections.dayOff = null;
     selections.nightOff = null;
     selections.weekStructure = null;
+    selections.blockedTimes = [];   // ⭐ NEW
 
     // Remove active class from ALL buttons
     document.querySelectorAll("button.active").forEach(btn => {
         btn.classList.remove("active");
     });
 
+    // Clear blocked‑time bubbles
+    document.getElementById("blockedDisplay").innerHTML = "";   // ⭐ NEW
+
     // Optional: Clear results area
     document.getElementById("results").innerHTML = "<p>Filters cleared. Choose new preferences.</p>";
 });
 
+/* ============================================================
+   Update  blocked Display
+============================================================ */
+function updateBlockedDisplay() {
+    const box = document.getElementById("blockedDisplay");
+    box.innerHTML = "";
+
+    if (selections.blockedTimes.length === 0) {
+        box.innerHTML = "<p style='color:#666;'>No blocked times selected.</p>";
+        return;
+    }
+
+    selections.blockedTimes.forEach((b, index) => {
+        const bubble = document.createElement("div");
+        bubble.style.display = "inline-block";
+        bubble.style.padding = "6px 12px";
+        bubble.style.margin = "4px";
+        bubble.style.background = "#4a6cf7";
+        bubble.style.color = "white";
+        bubble.style.borderRadius = "20px";
+        bubble.style.fontSize = "14px";
+
+        bubble.innerText = `${b.day} ${b.start}:00–${b.end}:00`;
+
+        box.appendChild(bubble);
+    });
+}
 
 
 /* ============================================================
