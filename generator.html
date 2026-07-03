@@ -179,55 +179,52 @@
     <div id="blockedDisplay" style="margin-top:10px;"></div>
 
     <!-- Blocked Time Modal -->
-    <div id="blockedModal" class="modal hidden">
-      <div class="modal-content">
-        <h3>Block a Time Range</h3>
+    <div id="blockedPanel" style="display:none; margin-top:10px; padding:10px; border:1px solid #ccc; border-radius:8px;">
+      <h3>Add Blocked Time</h3>
     
-        <label>Day:</label>
-        <select id="blockedDay">
-          <option>Monday</option>
-          <option>Tuesday</option>
-          <option>Wednesday</option>
-          <option>Thursday</option>
-          <option>Friday</option>
-        </select>
+      <label>Day:</label>
+      <select id="blockedDay">
+        <option>Monday</option>
+        <option>Tuesday</option>
+        <option>Wednesday</option>
+        <option>Thursday</option>
+        <option>Friday</option>
+      </select>
     
-        <label>Start Time:</label>
-        <select id="blockedStart">
-          <option value="8">8:00 AM</option>
-          <option value="9">9:00 AM</option>
-          <option value="10">10:00 AM</option>
-          <option value="11">11:00 AM</option>
-          <option value="12">12:00 PM</option>
-          <option value="13">1:00 PM</option>
-          <option value="14">2:00 PM</option>
-          <option value="15">3:00 PM</option>
-          <option value="16">4:00 PM</option>
-          <option value="17">5:00 PM</option>
-          <option value="18">6:00 PM</option>
-          <option value="19">7:00 PM</option>
-          <option value="20">8:00 PM</option>
-        </select>
+      <label>Start:</label>
+      <select id="blockedStart">
+        <option value="8">8:00 AM</option>
+        <option value="9">9:00 AM</option>
+        <option value="10">10:00 AM</option>
+        <option value="11">11:00 AM</option>
+        <option value="12">12:00 PM</option>
+        <option value="13">1:00 PM</option>
+        <option value="14">2:00 PM</option>
+        <option value="15">3:00 PM</option>
+        <option value="16">4:00 PM</option>
+        <option value="17">5:00 PM</option>
+        <option value="18">6:00 PM</option>
+        <option value="19">7:00 PM</option>
+        <option value="20">8:00 PM</option>
+      </select>
     
-        <label>End Time:</label>
-        <select id="blockedEnd">
-          <option value="9">9:00 AM</option>
-          <option value="10">10:00 AM</option>
-          <option value="11">11:00 AM</option>
-          <option value="12">12:00 PM</option>
-          <option value="13">1:00 PM</option>
-          <option value="14">2:00 PM</option>
-          <option value="15">3:00 PM</option>
-          <option value="16">4:00 PM</option>
-          <option value="17">5:00 PM</option>
-          <option value="18">6:00 PM</option>
-          <option value="19">7:00 PM</option>
-          <option value="20">8:00 PM</option>
-        </select>
+      <label>End:</label>
+      <select id="blockedEnd">
+        <option value="9">9:00 AM</option>
+        <option value="10">10:00 AM</option>
+        <option value="11">11:00 AM</option>
+        <option value="12">12:00 PM</option>
+        <option value="13">1:00 PM</option>
+        <option value="14">2:00 PM</option>
+        <option value="15">3:00 PM</option>
+        <option value="16">4:00 PM</option>
+        <option value="17">5:00 PM</option>
+        <option value="18">6:00 PM</option>
+        <option value="19">7:00 PM</option>
+        <option value="20">8:00 PM</option>
+      </select>
     
-        <button id="saveBlockedTime">Save Blocked Time</button>
-        <button id="closeBlockedModal">Cancel</button>
-      </div>
+      <button id="confirmBlockedTime">Add</button>
     </div>
     
     <div class="section">
@@ -255,18 +252,12 @@
 </div>
 
 <script>
-    
-const blockedModal = document.getElementById("blockedModal");
 
 document.getElementById("addBlockedTimeBtn").onclick = () => {
-  blockedModal.classList.remove("hidden");
+  document.getElementById("blockedPanel").style.display = "block";
 };
-
-document.getElementById("closeBlockedModal").onclick = () => {
-  blockedModal.classList.add("hidden");
-};
-    
-document.getElementById("saveBlockedTime").onclick = () => {
+   
+document.getElementById("confirmBlockedTime").onclick = () => {
   const longDay = document.getElementById("blockedDay").value;
   const dayMap = {
     "Monday": "Mon",
@@ -282,9 +273,9 @@ document.getElementById("saveBlockedTime").onclick = () => {
 
   selections.blockedTimes.push({ day, start, end });
 
-  updateBlockedDisplay();   // ⭐ THIS IS WHERE YOU MODIFY THE HANDLER
+  updateBlockedDisplay();  // show bubble
 
-  blockedModal.classList.add("hidden");
+  document.getElementById("blockedPanel").style.display = "none"; // close panel
 };
 
     
