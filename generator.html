@@ -1028,25 +1028,29 @@ function checkImpossibleBlockedTimes(courses, prefs) {
         const allEvents = [...d.lecture, ...d.lab];
 
         for (const block of prefs.blockedTimes) {
-            const dayShort = block.day; // e.g., "Thu"
-            const start = block.start;
-            const end = block.end;
+            const dayShort = block.day;
+            const startMin = block.start * 60;
+            const endMin = block.end * 60;
 
             const everySectionOverlaps = allEvents.every(e => {
                 if (e.async) return false;
                 if (!e.days.includes(dayShort)) return false;
 
-                return !(e.end <= start || e.start >= end);
+                const eventStartMin = tmin(e.start);
+                const eventEndMin = tmin(e.end);
+
+                return !(eventEndMin <= startMin || eventStartMin >= endMin);
             });
 
             if (everySectionOverlaps) {
-                return `It is impossible to avoid ${dayShort} ${start}:00–${end}:00 because ${code} always overlaps that time.`;
+                return `It is impossible to avoid ${dayShort} ${block.start}:00–${block.end}:00 because ${code} always overlaps that time.`;
             }
         }
     }
 
     return null;
 }
+
     
 function checkNoScheduleCanAvoidDay(schedules, prefs) {
     if (!prefs.dayOff) return null;
