@@ -412,7 +412,7 @@ function parseCourses() {
 
 for (let line of cleaned) {
 
-    const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*)/);
+    const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*)$/i);
     if (!m) continue;
 
     const [_, crn, subj, num, sec, rest] = m;
@@ -602,21 +602,22 @@ function generateAllSchedules(courses) {
                     // ⭐ NEW: Proper tutorial/lab pairing
                     const lecPrefix = lec.section[0]; // A, B, C
                     
-                    // Tutorials: A1, A2, B1, B2, C1, C2
-                    if (/^[A-Z]\d{1,2}$/.test(lab.section)) {
-                        if (lab.section.startsWith(lecPrefix)) {
-                            combos.push([code, lec, lab]);
-                        }
+                    // ⭐ CLASSIFY SECTIONS
+                    if (isTutorial(sec)) {
+                        entry.type = "tutorial";
+                        courses[code].lab.push(entry); // you can rename this array later if you want
                     }
-                    // Labs: L1, L2
-                    else if (lab.section.startsWith("L")) {
-                        combos.push([code, lec, lab]);
+                    else if (sec.startsWith("L")) {
+                        entry.type = "lab";
+                        courses[code].lab.push(entry);
                     }
-                    // T-type tutorials: AT, BT
-                    else if (lab.section.endsWith("T")) {
-                        if (lab.section.startsWith(lecPrefix)) {
-                            combos.push([code, lec, lab]);
-                        }
+                    else if (sec.endsWith("T")) {
+                        entry.type = "tutorial";
+                        courses[code].lab.push(entry);
+                    }
+                    else {
+                        entry.type = "lecture";
+                        courses[code].lecture.push(entry);
                     }
                 }
             }
