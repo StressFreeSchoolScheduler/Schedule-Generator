@@ -471,19 +471,34 @@ for (let line of cleaned) {
        EXTRACT DAYS (only for non-async)
     ============================================================ */
     let day_list = [];
-
+    
+    // Handle compressed patterns like MWF, TR, MW, WF, MR, TF
     for (let [pattern, expanded] of COMPRESSED_DAY_PATTERNS) {
         if (rest.includes(pattern)) day_list.push(...expanded);
     }
-
+    
+    // ⭐ NEW: handle spaced day pairs (Mon Wed, Tue Thu, Wed Fri)
+    const SPACED_DAY_PAIRS = [
+        ["Mon Wed", ["Mon", "Wed"]],
+        ["Tue Thu", ["Tue", "Thu"]],
+        ["Wed Fri", ["Wed", "Fri"]],
+        ["Mon Fri", ["Mon", "Fri"]],
+        ["Tue Fri", ["Tue", "Fri"]],
+        ["Thu Fri", ["Thu", "Fri"]],
+    ];
+    
+    for (let [pattern, expanded] of SPACED_DAY_PAIRS) {
+        if (rest.includes(pattern)) day_list.push(...expanded);
+    }
+    
+    // Normal single-day detection
     for (let full of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
         if (rest.includes(full)) day_list.push(full);
     }
-
-
+    
     day_list = [...new Set(day_list)];
     if (day_list.length === 0) continue;
-
+    
     /* ============================================================
        EXTRACT TIMES
     ============================================================ */
