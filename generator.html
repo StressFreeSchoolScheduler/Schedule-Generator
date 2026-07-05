@@ -434,7 +434,7 @@ for (let line of cleaned) {
     let isAsync = asyncKeywords.some(k => rest.toUpperCase().includes(k));
 
     if (isAsync) {
-        if (!courses[code]) courses[code] = { lecture: [], lab: [] };
+        if (!courses[code]) courses[code] = { lecture: [], lab: [], tutorial: [] };
 
         const entry = {
             course: code,
@@ -448,7 +448,7 @@ for (let line of cleaned) {
     // ⭐ CLASSIFY SECTIONS PROPERLY
     if (isTutorial(sec)) {
         entry.type = "tutorial";
-        courses[code].lab.push(entry);
+        courses[code].tutorial.push(entry);
     }
     else if (sec.startsWith("L")) {
         entry.type = "lab";
@@ -456,13 +456,12 @@ for (let line of cleaned) {
     }
     else if (sec.endsWith("T")) {
         entry.type = "tutorial";
-        courses[code].lab.push(entry);
+        courses[code].tutorial.push(entry);
     }
     else {
         entry.type = "lecture";
         courses[code].lecture.push(entry);
     }
-
 
         continue; // async handled, skip normal parsing
     }
@@ -513,7 +512,7 @@ for (let line of cleaned) {
     let start = normalizeTime(timeMatch[1]);
     let end = normalizeTime(timeMatch[2]);
 
-    if (!courses[code]) courses[code] = { lecture: [], lab: [] };
+    if (!courses[code]) courses[code] = { lecture: [], lab: [], tutorial: [] };
 
     const entry = { 
         course: code,
@@ -637,30 +636,23 @@ function generateAllSchedules(courses) {
 
         if (!d.lecture || d.lecture.length === 0) continue;
 
-        if (d.lab && d.lab.length > 0) {
+        const hasTutorials = d.tutorial && d.tutorial.length > 0;
+        const hasLabs = d.lab && d.lab.length > 0;
+        
+        if (hasTutorials || hasLabs) {
             for (let lec of d.lecture) {
                 const lecPrefix = lec.section[0]; // A, B, C
-
+        
+                // ⭐ Pair tutorials ONLY with matching lecture prefix
+                for (let tut of d.tutorial) {
+                    if (tut.section.startsWith(lecPrefix)) {
+                        combos.push([code, lec, tut]);
+                    }
+                }
+        
+                // ⭐ Pair labs with ANY lecture
                 for (let lab of d.lab) {
-
-                    // Tutorials: A1, A2, A01, B3, C3
-                    if (/^[A-Z]\d{1,2}$/.test(lab.section)) {
-                        if (lab.section.startsWith(lecPrefix)) {
-                            combos.push([code, lec, lab]);
-                        }
-                    }
-
-                    // Labs: L1, L2
-                    else if (lab.section.startsWith("L")) {
-                        combos.push([code, lec, lab]);
-                    }
-
-                    // T-type tutorials: AT, BT
-                    else if (lab.section.endsWith("T")) {
-                        if (lab.section.startsWith(lecPrefix)) {
-                            combos.push([code, lec, lab]);
-                        }
-                    }
+                    combos.push([code, lec, lab]);
                 }
             }
         } else {
