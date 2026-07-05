@@ -445,23 +445,23 @@ for (let line of cleaned) {
             async: true
         };
 
-        // ⭐ CLASSIFY SECTIONS PROPERLY
-        if (isTutorial(sec)) {
-            entry.type = "tutorial";
-            courses[code].lab.push(entry);   // still stored in d.lab unless you rename it later
-        }
-        else if (sec.startsWith("L")) {
-            entry.type = "lab";
-            courses[code].lab.push(entry);
-        }
-        else if (sec.endsWith("T")) {
-            entry.type = "tutorial";
-            courses[code].lab.push(entry);
-        }
-        else {
-            entry.type = "lecture";
-            courses[code].lecture.push(entry);
-        }
+    // ⭐ CLASSIFY SECTIONS PROPERLY
+    if (isTutorial(sec)) {
+        entry.type = "tutorial";
+        courses[code].lab.push(entry);   // stored in lab array for pairing
+    }
+    else if (sec.startsWith("L")) {
+        entry.type = "lab";
+        courses[code].lab.push(entry);
+    }
+    else if (sec.endsWith("T")) {
+        entry.type = "tutorial";
+        courses[code].lab.push(entry);
+    }
+    else {
+        entry.type = "lecture";
+        courses[code].lecture.push(entry);
+    }
 
         continue; // async handled, skip normal parsing
     }
@@ -1018,8 +1018,10 @@ function displaySchedules(schedules) {
             const div = document.createElement("div");
             div.innerHTML = `
                 <strong>${code}</strong><br>
-                Lec ${lec.section} (${lec.days.join(", ")} ${lec.start}-${lec.end})
-                ${lab ? `<br>Lab ${lab.section} (${lab.days.join(", ")} ${lab.start}-${lab.end})` : ""}
+                ${lec.type.charAt(0).toUpperCase() + lec.type.slice(1)} ${lec.section}
+                (${lec.days.join(", ")} ${lec.start}-${lec.end})
+                ${lab ? `<br>${lab.type.charAt(0).toUpperCase() + lab.type.slice(1)} ${lab.section}
+                (${lab.days.join(", ")} ${lab.start}-${lab.end})` : ""}
                 <br><br>
             `;
             textDiv.appendChild(div);
