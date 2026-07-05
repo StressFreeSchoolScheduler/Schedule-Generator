@@ -407,7 +407,7 @@ function parseCourses() {
     }
     
     function isTutorial(sec) {
-        return /^[A-Z]\d+$/.test(sec); // A1, A2, B3, C2, etc.
+        return /^[A-Z]\d{1,2}$/.test(sec); // A1, A2, B3, C2, etc.
     }
 
 for (let line of cleaned) {
@@ -605,7 +605,7 @@ function generateAllSchedules(courses) {
                     const lecPrefix = lec.section[0]; // A, B, C
                     
                     // Tutorials: A1, A2, B1, B2, C1, C2
-                    if (/^[A-Z]\d+$/.test(lab.section)) {
+                    if (/^[A-Z]\d{1,2}$/.test(lab.section)) {
                         if (lab.section.startsWith(lecPrefix)) {
                             combos.push([code, lec, lab]);
                         }
