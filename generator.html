@@ -376,7 +376,7 @@ function parseCourses() {
         line = line.replace(/\t/g, " ");
         line = line.replace(/\s+to\s+/i, " - ");
         line = line.replace(/\s+/g, " ").trim();
-        line = line.replace(/\s+\d\.\d{2}\s+Click here.*$/, "");
+        line = line.replace(/\s+Click here.*$/, "");
         if (line.length > 0) cleaned.push(line);
     }
 
