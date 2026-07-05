@@ -402,6 +402,13 @@ function parseCourses() {
     ];
 
     let courses = {};
+    function isLecture(sec) {
+        return /^[A-Z]$/.test(sec);   // A, B, C
+    }
+    
+    function isTutorial(sec) {
+        return /^[A-Z]\d+$/.test(sec); // A1, A2, B3, C2, etc.
+    }
 
 for (let line of cleaned) {
 
@@ -438,7 +445,7 @@ for (let line of cleaned) {
             async: true
         };
 
-        if (sec.startsWith("L") || sec.endsWith("T")) {
+        if (isTutorial(sec) || sec.startsWith("L") || sec.endsWith("T")) {
             courses[code].lab.push(entry);
         } else {
             courses[code].lecture.push(entry);
@@ -490,7 +497,7 @@ for (let line of cleaned) {
         end
     };
 
-    if (sec.startsWith("L") || sec.endsWith("T")) {
+    if (isTutorial(sec) || sec.startsWith("L") || sec.endsWith("T")) {
         courses[code].lab.push(entry);
     } else {
         courses[code].lecture.push(entry);
