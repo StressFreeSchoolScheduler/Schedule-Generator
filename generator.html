@@ -445,9 +445,21 @@ for (let line of cleaned) {
             async: true
         };
 
-        if (isTutorial(sec) || sec.startsWith("L") || sec.endsWith("T")) {
+        // ⭐ CLASSIFY SECTIONS PROPERLY
+        if (isTutorial(sec)) {
+            entry.type = "tutorial";
+            courses[code].lab.push(entry);   // still stored in d.lab unless you rename it later
+        }
+        else if (sec.startsWith("L")) {
+            entry.type = "lab";
             courses[code].lab.push(entry);
-        } else {
+        }
+        else if (sec.endsWith("T")) {
+            entry.type = "tutorial";
+            courses[code].lab.push(entry);
+        }
+        else {
+            entry.type = "lecture";
             courses[code].lecture.push(entry);
         }
 
@@ -598,26 +610,27 @@ function generateAllSchedules(courses) {
 
         if (d.lab && d.lab.length > 0) {
             for (let lec of d.lecture) {
+                const lecPrefix = lec.section[0]; // A, B, C
+
                 for (let lab of d.lab) {
-                    // ⭐ NEW: Proper tutorial/lab pairing
-                    const lecPrefix = lec.section[0]; // A, B, C
-                    
-                    // ⭐ CLASSIFY SECTIONS
-                    if (isTutorial(sec)) {
-                        entry.type = "tutorial";
-                        courses[code].lab.push(entry); // you can rename this array later if you want
+
+                    // Tutorials: A1, A2, A01, B3, C3
+                    if (/^[A-Z]\d{1,2}$/.test(lab.section)) {
+                        if (lab.section.startsWith(lecPrefix)) {
+                            combos.push([code, lec, lab]);
+                        }
                     }
-                    else if (sec.startsWith("L")) {
-                        entry.type = "lab";
-                        courses[code].lab.push(entry);
+
+                    // Labs: L1, L2
+                    else if (lab.section.startsWith("L")) {
+                        combos.push([code, lec, lab]);
                     }
-                    else if (sec.endsWith("T")) {
-                        entry.type = "tutorial";
-                        courses[code].lab.push(entry);
-                    }
-                    else {
-                        entry.type = "lecture";
-                        courses[code].lecture.push(entry);
+
+                    // T-type tutorials: AT, BT
+                    else if (lab.section.endsWith("T")) {
+                        if (lab.section.startsWith(lecPrefix)) {
+                            combos.push([code, lec, lab]);
+                        }
                     }
                 }
             }
