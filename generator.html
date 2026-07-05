@@ -601,12 +601,24 @@ function generateAllSchedules(courses) {
         if (d.lab && d.lab.length > 0) {
             for (let lec of d.lecture) {
                 for (let lab of d.lab) {
-                    if (lab.section.endsWith("T")) {
-                        if (lab.section.startsWith(lec.section)) {
+                    // ⭐ NEW: Proper tutorial/lab pairing
+                    const lecPrefix = lec.section[0]; // A, B, C
+                    
+                    // Tutorials: A1, A2, B1, B2, C1, C2
+                    if (/^[A-Z]\d+$/.test(lab.section)) {
+                        if (lab.section.startsWith(lecPrefix)) {
                             combos.push([code, lec, lab]);
                         }
-                    } else if (lab.section.startsWith("L")) {
+                    }
+                    // Labs: L1, L2
+                    else if (lab.section.startsWith("L")) {
                         combos.push([code, lec, lab]);
+                    }
+                    // T-type tutorials: AT, BT
+                    else if (lab.section.endsWith("T")) {
+                        if (lab.section.startsWith(lecPrefix)) {
+                            combos.push([code, lec, lab]);
+                        }
                     }
                 }
             }
