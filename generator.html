@@ -375,7 +375,10 @@ function parseCourses() {
         line = line.replace("On Your Worksheet", "");
         line = line.replace(/\t/g, " ");
         line = line.replace(/\s+to\s+/i, " - ");
-        line = line.replace(/\s+/g, " ").trim();
+        line = line.replace(/\t/g, " ");        // tabs → spaces
+        line = line.replace(/Click here.*$/, ""); 
+        line = line.replace(/\s+to\s+/i, " - "); // normalize "to"
+        line = line.replace(/ +/g, " ").trim(); // collapse spaces but NOT inside section code
         line = line.replace(/Click here.*$/, "");
         if (line.length > 0) cleaned.push(line);
     }
