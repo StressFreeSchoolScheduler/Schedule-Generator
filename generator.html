@@ -429,8 +429,7 @@ for (let line of cleaned) {
         num,
         sec,
         title,
-        day1,
-        day2,
+        daysRaw,
         startRaw,
         endRaw
     ] = m;
@@ -440,8 +439,6 @@ for (let line of cleaned) {
     // Title is already captured correctly
     let fullName = title.trim();
     
-    // ⭐ Build proper day string
-    const daysRaw = [day1, day2].filter(Boolean).join(" ");
 
     /* ============================================================
        DETECT ASYNC FIRST (before day parsing)
