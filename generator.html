@@ -372,13 +372,11 @@ function parseCourses() {
     let cleaned = [];
 
     for (let line of lines) {
+        line = line.replace("On Your Worksheet", "");
         line = line.replace(/\t/g, " ");
         line = line.replace(/\s+to\s+/i, " - ");
-        line = line.replace(/\t/g, " ");        // tabs → spaces
-        line = line.replace(/Click here.*$/, ""); 
-        line = line.replace(/\s+to\s+/i, " - "); // normalize "to"
-        line = line.replace(/ +/g, " ").trim(); // collapse spaces but NOT inside section code
-        line = line.replace(/Click here.*$/, "");
+        line = line.replace(/\s+/g, " ").trim();
+        line = line.replace(/\s+\d\.\d{2}\s+Click here.*$/, "");
         if (line.length > 0) cleaned.push(line);
     }
 
@@ -404,41 +402,16 @@ function parseCourses() {
     ];
 
     let courses = {};
-    function isLecture(sec) {
-        return /^[A-Z]$/.test(sec);   // A, B, C
-    }
-    
-    function isTutorial(sec) {
-        return /^[A-Z]\d{1,2}$/.test(sec); // A1, A2, B3, C2, etc.
-    }
 
 for (let line of cleaned) {
 
-    const m = line.match(
-        /^(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.+?)(?= Mon| Tue| Wed| Thu| Fri)\s+(Mon|Tue|Wed|Thu|Fri(?:\s+Mon|\s+Tue|\s+Wed|\s+Thu|\s+Fri)*)\s+(\d{1,2}:\d{2})\s*(?:-|to)\s*(\d{1,2}:\d{2})$/i
-
-    );
-
-
+    const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*)/);
     if (!m) continue;
 
-    const [
-        _,
-        crn,
-        subj,
-        num,
-        sec,
-        title,
-        daysRaw,
-        startRaw,
-        endRaw
-    ] = m;
-
+    const [_, crn, subj, num, sec, rest] = m;
     const code = subj + num;
 
-    // Title is already captured correctly
-    let fullName = title.trim();
-    
+    let fullName = rest.split(/ Mon| Tue| Wed| Thu| Fri/)[0].trim();
 
     /* ============================================================
        DETECT ASYNC FIRST (before day parsing)
@@ -451,11 +424,11 @@ for (let line of cleaned) {
         "NO SCHEDULE",
         "TBA"
     ];
-    let isAsync = asyncKeywords.some(k => title.toUpperCase().includes(k));
+    let isAsync = asyncKeywords.some(k => rest.toUpperCase().includes(k));
 
     if (isAsync) {
-        if (!courses[code]) courses[code] = { lecture: [], lab: [], tutorial: [] };
-    
+        if (!courses[code]) courses[code] = { lecture: [], lab: [] };
+
         const entry = {
             course: code,
             section: sec,
@@ -464,64 +437,49 @@ for (let line of cleaned) {
             end: null,
             async: true
         };
-    
-        if (isTutorial(sec)) {
-            courses[code].tutorial.push(entry);
-        }
-        else if (sec.startsWith("L")) {
+
+        if (sec.startsWith("L") || sec.endsWith("T")) {
             courses[code].lab.push(entry);
-        }
-        else if (sec.endsWith("T")) {
-            courses[code].tutorial.push(entry);
-        }
-        else {
+        } else {
             courses[code].lecture.push(entry);
         }
-    
-        continue;
-    }
 
+        continue; // async handled, skip normal parsing
+    }
 
     /* ============================================================
        EXTRACT DAYS (only for non-async)
     ============================================================ */
     let day_list = [];
-    
-    // Handle compressed patterns like MWF, TR, MW, WF, MR, TF
+
     for (let [pattern, expanded] of COMPRESSED_DAY_PATTERNS) {
-        if (daysRaw.includes(pattern)) day_list.push(...expanded);
+        if (rest.includes(pattern)) day_list.push(...expanded);
     }
-    
-    // ⭐ NEW: handle spaced day pairs (Mon Wed, Tue Thu, Wed Fri)
-    const SPACED_DAY_PAIRS = [
-        ["Mon Wed", ["Mon", "Wed"]],
-        ["Tue Thu", ["Tue", "Thu"]],
-        ["Wed Fri", ["Wed", "Fri"]],
-        ["Mon Fri", ["Mon", "Fri"]],
-        ["Tue Fri", ["Tue", "Fri"]],
-        ["Thu Fri", ["Thu", "Fri"]],
-    ];
-    
-    for (let [pattern, expanded] of SPACED_DAY_PAIRS) {
-        if (daysRaw.includes(pattern)) day_list.push(...expanded);
-    }
-    
-    // Normal single-day detection
+
     for (let full of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
-        if (daysRaw.includes(full)) day_list.push(full);
+        if (rest.includes(full)) day_list.push(full);
     }
-    
+
+
     day_list = [...new Set(day_list)];
     if (day_list.length === 0) continue;
 
-    
     /* ============================================================
        EXTRACT TIMES
     ============================================================ */
-    let start = normalizeTime(startRaw);
-    let end = normalizeTime(endRaw);
+    let timeMatch = rest.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
+    if (!timeMatch) {
+        timeMatch = rest.match(/(\d{1,2}:\d{2}\s*[APMapm]{2})\s*[-–]\s*(\d{1,2}:\d{2}\s*[APMapm]{2})/);
+    }
+    if (!timeMatch) {
+        timeMatch = rest.match(/(\d{1,2}(?::\d{2})?\s*[APMapm]{2})\s*[-–]\s*(\d{1,2}(?::\d{2})?\s*[APMapm]{2})/);
+    }
+    if (!timeMatch) continue;
 
-    if (!courses[code]) courses[code] = { lecture: [], lab: [], tutorial: [] };
+    let start = normalizeTime(timeMatch[1]);
+    let end = normalizeTime(timeMatch[2]);
+
+    if (!courses[code]) courses[code] = { lecture: [], lab: [] };
 
     const entry = { 
         course: code,
@@ -532,23 +490,11 @@ for (let line of cleaned) {
         end
     };
 
-    if (isTutorial(sec)) {
-        entry.type = "tutorial";
-        courses[code].tutorial.push(entry);
-    }
-    else if (sec.startsWith("L")) {
-        entry.type = "lab";
+    if (sec.startsWith("L") || sec.endsWith("T")) {
         courses[code].lab.push(entry);
-    }
-    else if (sec.endsWith("T")) {
-        entry.type = "tutorial";
-        courses[code].tutorial.push(entry);
-    }
-    else {
-        entry.type = "lecture";
+    } else {
         courses[code].lecture.push(entry);
     }
-
 }
 
 
@@ -645,23 +591,16 @@ function generateAllSchedules(courses) {
 
         if (!d.lecture || d.lecture.length === 0) continue;
 
-        const hasTutorials = d.tutorial && d.tutorial.length > 0;
-        const hasLabs = d.lab && d.lab.length > 0;
-        
-        if (hasTutorials || hasLabs) {
+        if (d.lab && d.lab.length > 0) {
             for (let lec of d.lecture) {
-                const lecPrefix = lec.section[0]; // A, B, C
-        
-                // ⭐ Pair tutorials ONLY with matching lecture prefix
-                for (let tut of d.tutorial) {
-                    if (tut.section.startsWith(lecPrefix)) {
-                        combos.push([code, lec, tut]);
-                    }
-                }
-        
-                // ⭐ Pair labs with ANY lecture
                 for (let lab of d.lab) {
-                    combos.push([code, lec, lab]);
+                    if (lab.section.endsWith("T")) {
+                        if (lab.section.startsWith(lec.section)) {
+                            combos.push([code, lec, lab]);
+                        }
+                    } else if (lab.section.startsWith("L")) {
+                        combos.push([code, lec, lab]);
+                    }
                 }
             }
         } else {
@@ -1048,10 +987,8 @@ function displaySchedules(schedules) {
             const div = document.createElement("div");
             div.innerHTML = `
                 <strong>${code}</strong><br>
-                ${lec.type.charAt(0).toUpperCase() + lec.type.slice(1)} ${lec.section}
-                (${lec.days.join(", ")} ${lec.start}-${lec.end})
-                ${lab ? `<br>${lab.type.charAt(0).toUpperCase() + lab.type.slice(1)} ${lab.section}
-                (${lab.days.join(", ")} ${lab.start}-${lab.end})` : ""}
+                Lec ${lec.section} (${lec.days.join(", ")} ${lec.start}-${lec.end})
+                ${lab ? `<br>Lab ${lab.section} (${lab.days.join(", ")} ${lab.start}-${lab.end})` : ""}
                 <br><br>
             `;
             textDiv.appendChild(div);
