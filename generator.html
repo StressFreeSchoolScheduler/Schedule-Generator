@@ -415,7 +415,8 @@ function parseCourses() {
 for (let line of cleaned) {
 
     const m = line.match(
-        /^(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.+?)\s+(Mon|Tue|Wed|Thu|Fri)(?:\s+(Mon|Tue|Wed|Thu|Fri))*\s+(\d{1,2}:\d{2})\s*(?:-|to)\s*(\d{1,2}:\d{2})$/i
+        /^(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.+?)\s+(Mon|Tue|Wed|Thu|Fri(?:\s+Mon|\s+Tue|\s+Wed|\s+Thu|\s+Fri)*)\s+(\d{1,2}:\d{2})\s*(?:-|to)\s*(\d{1,2}:\d{2})$/i
+
     );
 
 
@@ -467,7 +468,6 @@ for (let line of cleaned) {
             async: true
         };
     
-        // classify async sections correctly
         if (isTutorial(sec)) {
             courses[code].tutorial.push(entry);
         }
@@ -481,9 +481,8 @@ for (let line of cleaned) {
             courses[code].lecture.push(entry);
         }
     
-        continue; // THIS MUST BE HERE
+        continue;
     }
-
 
 
     /* ============================================================
