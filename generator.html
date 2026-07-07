@@ -421,10 +421,26 @@ for (let line of cleaned) {
 
     if (!m) continue;
 
-    const [_, crn, subj, num, sec, rest] = m;
+    const [
+        _,
+        crn,
+        subj,
+        num,
+        sec,
+        title,
+        day1,
+        day2,
+        startRaw,
+        endRaw
+    ] = m;
+
     const code = subj + num;
 
-    let fullName = rest.split(/ Mon| Tue| Wed| Thu| Fri/)[0].trim();
+    // Title is already captured correctly
+    let fullName = title.trim();
+    
+    // ⭐ Build proper day string
+    const daysRaw = [day1, day2].filter(Boolean).join(" ");
 
     /* ============================================================
        DETECT ASYNC FIRST (before day parsing)
@@ -441,7 +457,8 @@ for (let line of cleaned) {
 
     if (isAsync) {
         if (!courses[code]) courses[code] = { lecture: [], lab: [], tutorial: [] };
-
+            continue;
+        }
         const entry = {
             course: code,
             section: sec,
@@ -477,7 +494,7 @@ for (let line of cleaned) {
     
     // Handle compressed patterns like MWF, TR, MW, WF, MR, TF
     for (let [pattern, expanded] of COMPRESSED_DAY_PATTERNS) {
-        if (rest.includes(pattern)) day_list.push(...expanded);
+        if (daysRaw.includes(pattern)) day_list.push(...expanded);
     }
     
     // ⭐ NEW: handle spaced day pairs (Mon Wed, Tue Thu, Wed Fri)
@@ -491,12 +508,12 @@ for (let line of cleaned) {
     ];
     
     for (let [pattern, expanded] of SPACED_DAY_PAIRS) {
-        if (rest.includes(pattern)) day_list.push(...expanded);
+        if (daysRaw.includes(pattern)) day_list.push(...expanded);
     }
     
     // Normal single-day detection
     for (let full of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
-        if (rest.includes(full)) day_list.push(full);
+        if (daysRaw.includes(full)) day_list.push(full);
     }
     
     day_list = [...new Set(day_list)];
@@ -506,15 +523,8 @@ for (let line of cleaned) {
     /* ============================================================
        EXTRACT TIMES
     ============================================================ */
-    let timeMatch =
-        rest.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/) ||   // 11:35 - 12:55
-        rest.match(/(\d{1,2}:\d{2})\s+to\s+(\d{1,2}:\d{2})/) ||     // 11:35 to 12:55
-        rest.match(/(\d{1,2}:\d{2})\s+(\d{1,2}:\d{2})/);            // 11:35 12:55 (compressed)
-    
-    if (!timeMatch) continue;
-    
-    let start = normalizeTime(timeMatch[1]);
-    let end = normalizeTime(timeMatch[2]);
+    let start = normalizeTime(startRaw);
+    let end = normalizeTime(endRaw);
 
     if (!courses[code]) courses[code] = { lecture: [], lab: [], tutorial: [] };
 
@@ -529,7 +539,7 @@ for (let line of cleaned) {
 
     if (isTutorial(sec)) {
         entry.type = "tutorial";
-        courses[code].lab.push(entry);
+        courses[code].tutorial.push(entry);
     }
     else if (sec.startsWith("L")) {
         entry.type = "lab";
@@ -537,7 +547,7 @@ for (let line of cleaned) {
     }
     else if (sec.endsWith("T")) {
         entry.type = "tutorial";
-        courses[code].lab.push(entry);
+        courses[code].tutorial.push(entry);
     }
     else {
         entry.type = "lecture";
