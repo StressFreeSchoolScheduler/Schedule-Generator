@@ -451,7 +451,7 @@ for (let line of cleaned) {
     // ⭐ CLASSIFY SECTIONS PROPERLY
     if (isTutorial(sec)) {
         entry.type = "tutorial";
-        courses[code].tutorial.push(entry);
+        courses[code].tutorial.push(entry);   // ✔ FIXED
     }
     else if (sec.startsWith("L")) {
         entry.type = "lab";
@@ -459,7 +459,7 @@ for (let line of cleaned) {
     }
     else if (sec.endsWith("T")) {
         entry.type = "tutorial";
-        courses[code].tutorial.push(entry);
+        courses[code].tutorial.push(entry);   // ✔ FIXED
     }
     else {
         entry.type = "lecture";
