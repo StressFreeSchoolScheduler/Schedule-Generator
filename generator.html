@@ -372,7 +372,6 @@ function parseCourses() {
     let cleaned = [];
 
     for (let line of lines) {
-        line = line.replace("On Your Worksheet", "");
         line = line.replace(/\t/g, " ");
         line = line.replace(/\s+to\s+/i, " - ");
         line = line.replace(/\t/g, " ");        // tabs → spaces
@@ -415,7 +414,9 @@ function parseCourses() {
 
 for (let line of cleaned) {
 
-    const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*)$/i);
+    const m = line.match(
+        /^On Your Worksheet\s+(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*?)\s+([A-Za-z]{3}(?:\s+[A-Za-z]{3})*)\s+(\d{1,2}:\d{2})\s*(?:to|-)\s*(\d{1,2}:\d{2})/i
+    );
     if (!m) continue;
 
     const [_, crn, subj, num, sec, rest] = m;
