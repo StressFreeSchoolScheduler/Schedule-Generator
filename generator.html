@@ -528,7 +528,7 @@ for (let line of cleaned) {
 
     if (isTutorial(sec)) {
         entry.type = "tutorial";
-        courses[code].lab.push(entry);
+        courses[code].tutorial.push(entry);
     }
     else if (sec.startsWith("L")) {
         entry.type = "lab";
@@ -536,7 +536,7 @@ for (let line of cleaned) {
     }
     else if (sec.endsWith("T")) {
         entry.type = "tutorial";
-        courses[code].lab.push(entry);
+        courses[code].tutorial.push(entry);
     }
     else {
         entry.type = "lecture";
