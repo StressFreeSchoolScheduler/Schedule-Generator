@@ -404,7 +404,7 @@ function parseCourses() {
         if (!m) continue;
 
         const [_, crn, subj, num, sec] = m;
-        const rest = line.split(sec)[1].trim();
+        const rest = line.substring(line.indexOf(sec) + sec.length).trim();
         const code = subj + num;
 
         // ---------- EXTRACT DAYS ----------
