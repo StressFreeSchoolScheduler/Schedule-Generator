@@ -399,8 +399,10 @@ function parseCourses() {
     for (let line of cleaned) {
 
         const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z][0-9A-Z]*)/);
-
-        if (!m) continue;
+        if (!m) {
+            console.log("SKIPPED (regex failed):", line);
+            continue;
+        }
 
         const [_, crn, subj, num, sec] = m;
         const pos = line.search(/\b[A-Z][0-9A-Z]*\b/);
@@ -432,14 +434,20 @@ function parseCourses() {
         }
 
         days = [...new Set(days)];
-        if (!days.length) continue;
+        if (!days.length) {
+            console.log("SKIPPED (no days):", line);
+            continue;
+        }
 
         // ---------- EXTRACT TIMES ----------
         const timeMatch =
             rest.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/) ||
             rest.match(/(\d{1,2}:\d{2})\s+(\d{1,2}:\d{2})/);
-
-        if (!timeMatch) continue;
+        
+        if (!timeMatch) {
+            console.log("SKIPPED (no time):", line);
+            continue;
+        }
 
         const start = timeMatch[1];
         const end   = timeMatch[2];
