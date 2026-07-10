@@ -369,186 +369,99 @@ function parseCourses() {
     }
 
     const lines = raw.split("\n");
-    let cleaned = [];
+    const cleaned = [];
 
+    // ---------- CLEAN LINES ----------
     for (let line of lines) {
         line = line.replace("On Your Worksheet", "");
         line = line.replace(/\t/g, " ");
-        line = line.replace(/\s+to\s+/i, " - ");
-        line = line.replace(/\t/g, " ");        // tabs → spaces
-        line = line.replace(/Click here.*$/, ""); 
-        line = line.replace(/\s+to\s+/i, " - "); // normalize "to"
-        line = line.replace(/ {2,}/g, " ").trim(); // collapse spaces but NOT inside section code
         line = line.replace(/Click here.*$/, "");
+        line = line.replace(/\s+to\s+/i, " - ");   // "to" → "-"
+        line = line.replace(/ {2,}/g, " ").trim(); // ⭐ FIXED: collapse only 2+ spaces
         if (line.length > 0) cleaned.push(line);
     }
 
-    /* ============================================================
-       DAY MAPPINGS (Canada + US)
-    ============================================================ */
-    const DAY_MAP = {
-        "Mon": "Mon", "M": "Mon",
-        "Tue": "Tue", "T": "Tue",
-        "Wed": "Wed", "W": "Wed",
-        "Thu": "Thu", "R": "Thu",
-        "Fri": "Fri", "F": "Fri"
-    };
+    const courses = {};
 
-    const COMPRESSED_DAY_PATTERNS = [
-        ["MWF", ["Mon", "Wed", "Fri"]],
-        ["TR", ["Tue", "Thu"]],
-        ["MTWRF", ["Mon", "Tue", "Wed", "Thu", "Fri"]],
-        ["MW", ["Mon", "Wed"]],
-        ["WF", ["Wed", "Fri"]],
-        ["MR", ["Mon", "Thu"]],
-        ["TF", ["Tue", "Fri"]]
-    ];
-
-    let courses = {};
+    // ---------- HELPERS ----------
     function isLecture(sec) {
-        return /^[A-Z]$/.test(sec);   // A, B, C
+        return /^[A-Z]$/.test(sec);          // A, B, C
     }
-    
+
+    function isLab(sec) {
+        return /^L\d+$/.test(sec);           // L1, L2, L3...
+    }
+
     function isTutorial(sec) {
-        return /^[A-Z]\d{1,2}$/.test(sec); // A1, A2, B3, C2, etc.
+        return /^[A-Z](\d{1,2}|T)$/.test(sec); // A1, A01, AT, BT, etc.
     }
 
-for (let line of cleaned) {
+    // ---------- MAIN PARSE LOOP ----------
+    for (let line of cleaned) {
 
-    const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z][A-Z0-9]*)\s+(.*)$/i);
-    if (!m) continue;
+        // CRN SUBJECT NUMBER SECTION REST
+        const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*)$/i);
+        if (!m) continue;
 
-    const [_, crn, subj, num, sec, rest] = m;
-    const code = subj + num;
+        const [_, crn, subj, num, sec, rest] = m;
+        const code = subj + num;
 
-    let fullName = rest.split(/ Mon| Tue| Wed| Thu| Fri/)[0].trim();
+        // Extract days + times
+        const dayMatch = rest.match(/(Mon|Tue|Wed|Thu|Fri(?:\s+(Mon|Tue|Wed|Thu|Fri))*)/);
+        const timeMatch =
+            rest.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/) ||
+            rest.match(/(\d{1,2}:\d{2})\s+(\d{1,2}:\d{2})/);
 
-    /* ============================================================
-       DETECT ASYNC FIRST (before day parsing)
-    ============================================================ */
-    const asyncKeywords = [
-        "ASYNC",
-        "ASYNCH",
-        "ONLINE",
-        "DISTANCE",
-        "NO SCHEDULE",
-        "TBA"
-    ];
-    let isAsync = asyncKeywords.some(k => rest.toUpperCase().includes(k));
+        if (!dayMatch || !timeMatch) continue;
 
-    if (isAsync) {
-        if (!courses[code]) courses[code] = { lecture: [], lab: [], tutorial: [] };
+        const daysStr = dayMatch[0];
+        const days = daysStr.split(" ").filter(Boolean);
+
+        const start = timeMatch[1];
+        const end   = timeMatch[2];
+
+        if (!courses[code]) {
+            courses[code] = {
+                lecture: [],
+                lab: [],
+                tutorial: []
+            };
+        }
 
         const entry = {
             course: code,
             section: sec,
-            days: [],
-            start: null,
-            end: null,
-            async: true
+            days,
+            start,
+            end
         };
 
-        // ⭐ CLASSIFY SECTIONS PROPERLY
-        if (isTutorial(sec)) {
-            entry.type = "tutorial";
-            courses[code].tutorial.push(entry);
+        // ---------- CLASSIFY ----------
+        if (isLecture(sec)) {
+            entry.type = "lecture";
+            entry.letter = sec;              // A, B, C
+            courses[code].lecture.push(entry);
         }
-        else if (sec.startsWith("L")) {
+        else if (isLab(sec)) {
             entry.type = "lab";
-            courses[code].lab.push(entry);
+            courses[code].lab.push(entry);   // labs can go with ANY lecture
         }
-        else if (sec.endsWith("T")) {
+        else if (isTutorial(sec)) {
             entry.type = "tutorial";
+            entry.lectureLetter = sec[0];    // first char: A, B, etc.
             courses[code].tutorial.push(entry);
         }
         else {
+            // fallback: treat unknown as lecture
             entry.type = "lecture";
             courses[code].lecture.push(entry);
         }
-
-        continue; // async handled, skip normal parsing
     }
-
-    /* ============================================================
-       EXTRACT DAYS (only for non-async)
-    ============================================================ */
-    let day_list = [];
-    
-    // Handle compressed patterns like MWF, TR, MW, WF, MR, TF
-    for (let [pattern, expanded] of COMPRESSED_DAY_PATTERNS) {
-        if (rest.includes(pattern)) day_list.push(...expanded);
-    }
-    
-    // ⭐ NEW: handle spaced day pairs (Mon Wed, Tue Thu, Wed Fri)
-    const SPACED_DAY_PAIRS = [
-        ["Mon Wed", ["Mon", "Wed"]],
-        ["Tue Thu", ["Tue", "Thu"]],
-        ["Wed Fri", ["Wed", "Fri"]],
-        ["Mon Fri", ["Mon", "Fri"]],
-        ["Tue Fri", ["Tue", "Fri"]],
-        ["Thu Fri", ["Thu", "Fri"]],
-    ];
-    
-    for (let [pattern, expanded] of SPACED_DAY_PAIRS) {
-        if (rest.includes(pattern)) day_list.push(...expanded);
-    }
-    
-    // Normal single-day detection
-    for (let full of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
-        if (rest.includes(full)) day_list.push(full);
-    }
-    
-    day_list = [...new Set(day_list)];
-    if (day_list.length === 0) continue;
-
-    
-    /* ============================================================
-       EXTRACT TIMES
-    ============================================================ */
-    let timeMatch =
-        rest.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/) ||   // 11:35 - 12:55
-        rest.match(/(\d{1,2}:\d{2})\s+to\s+(\d{1,2}:\d{2})/) ||     // 11:35 to 12:55
-        rest.match(/(\d{1,2}:\d{2})\s+(\d{1,2}:\d{2})/);            // 11:35 12:55 (compressed)
-    
-    if (!timeMatch) continue;
-    
-    let start = normalizeTime(timeMatch[1]);
-    let end = normalizeTime(timeMatch[2]);
-
-    if (!courses[code]) courses[code] = { lecture: [], lab: [], tutorial: [] };
-
-    const entry = { 
-        course: code,
-        section: sec,
-        fullName,   // ⭐ add this
-        days: day_list,
-        start,
-        end
-    };
-
-    if (isTutorial(sec)) {
-        entry.type = "tutorial";
-        courses[code].tutorial.push(entry);
-    }
-    else if (sec.startsWith("L")) {
-        entry.type = "lab";
-        courses[code].lab.push(entry);
-    }
-    else if (sec.endsWith("T")) {
-        entry.type = "tutorial";
-        courses[code].tutorial.push(entry);
-    }
-    else {
-        entry.type = "lecture";
-        courses[code].lecture.push(entry);
-    }
-
-}
-
 
     window.courses = courses;
     alert("Courses loaded successfully!");
 }
+
 
 
 function violatesBlockedTime(event, blockedTimes) {
