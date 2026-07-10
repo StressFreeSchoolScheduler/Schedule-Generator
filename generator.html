@@ -406,27 +406,46 @@ function parseCourses() {
         const [_, crn, subj, num, sec, rest] = m;
         const code = subj + num;
 
-        // Extract days + times
-        const dayMatch = rest.match(/(Mon|Tue|Wed|Thu|Fri(?:\s+(Mon|Tue|Wed|Thu|Fri))*)/);
+        // ---------- EXTRACT DAYS ----------
+        let days = [];
+
+        // spaced pairs like "Mon Wed", "Tue Thu", "Wed Fri"
+        const SPACED_DAY_PAIRS = [
+            ["Mon Wed", ["Mon", "Wed"]],
+            ["Tue Thu", ["Tue", "Thu"]],
+            ["Wed Fri", ["Wed", "Fri"]],
+            ["Mon Fri", ["Mon", "Fri"]],
+            ["Tue Fri", ["Tue", "Fri"]],
+            ["Thu Fri", ["Thu", "Fri"]],
+        ];
+
+        for (const [pattern, expanded] of SPACED_DAY_PAIRS) {
+            if (rest.includes(pattern)) {
+                days.push(...expanded);
+            }
+        }
+
+        // single days
+        for (const d of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
+            if (rest.includes(d)) {
+                days.push(d);
+            }
+        }
+
+        // dedupe
+        days = [...new Set(days)];
+        if (!days.length) continue;
+
+        // ---------- EXTRACT TIMES ----------
         const timeMatch =
             rest.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/) ||
             rest.match(/(\d{1,2}:\d{2})\s+(\d{1,2}:\d{2})/);
 
-        if (!dayMatch || !timeMatch) continue;
-
-        const daysStr = dayMatch[0];
-        const days = daysStr.split(" ").filter(Boolean);
+        if (!timeMatch) continue;
 
         const start = timeMatch[1];
         const end   = timeMatch[2];
 
-        if (!courses[code]) {
-            courses[code] = {
-                lecture: [],
-                lab: [],
-                tutorial: []
-            };
-        }
 
         const entry = {
             course: code,
