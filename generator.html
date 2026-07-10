@@ -582,7 +582,7 @@ function generateAllSchedules(courses) {
             const matchingTutorials = d.tutorial.filter(t => t.section.startsWith(lecPrefix));
         
             // Collect labs that match this lecture
-            const matchingLabs = d.lab.filter(l => l.section.startsWith(lecPrefix));
+            const matchingLabs = d.lab;
         
             // If course has tutorials but none match → skip this lecture
             if (d.tutorial.length > 0 && matchingTutorials.length === 0) {
@@ -650,6 +650,7 @@ function generateAllSchedules(courses) {
         let events = [];
         for (let [_, lec, lab] of sched) {
             events.push(lec);
+            if (tut) events.push(tut);
             if (lab) events.push(lab);
         }
 
