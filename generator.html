@@ -648,7 +648,20 @@ function generateAllSchedules(courses) {
 
     for (let sched of all) {
         let events = [];
-        for (let [_, lec, lab] of sched) {
+    
+        for (let item of sched) {
+            const lec = item[1];
+    
+            let tut = null;
+            let lab = null;
+    
+            // Normalize item shape
+            for (let i = 2; i < item.length; i++) {
+                if (!item[i]) continue;
+                if (item[i].type === "tutorial") tut = item[i];
+                if (item[i].type === "lab")      lab = item[i];
+            }
+    
             events.push(lec);
             if (tut) events.push(tut);
             if (lab) events.push(lab);
