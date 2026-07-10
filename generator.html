@@ -403,7 +403,8 @@ function parseCourses() {
         if (!m) continue;
 
         const [_, crn, subj, num, sec] = m;
-        const rest = line.substring(line.indexOf(sec) + sec.length).trim();
+        const pos = line.search(/\b[A-Z][0-9A-Z]*\b/);
+        const rest = line.substring(pos + sec.length).trim();
         const code = subj + num;
 
         // ---------- EXTRACT DAYS ----------
