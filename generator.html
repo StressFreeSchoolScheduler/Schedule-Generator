@@ -448,8 +448,10 @@ function parseCourses() {
             courses[code] = { lecture: [], lab: [], tutorial: [] };
         }
 
-        const entry = { course: code, section: sec, days, start, end };
+        const entry = { course: code, section: sec, days, start, end };    
+        console.log("Loaded:", entry.course, entry.section, entry.days, entry.start, entry.end);
 
+        
         if (isLecture(sec)) {
             entry.type = "lecture";
             entry.letter = sec;
@@ -469,7 +471,7 @@ function parseCourses() {
             courses[code].lecture.push(entry);
         }
     }
-
+    console.log("COURSES OBJECT:", courses);
     window.courses = courses;
     alert("Courses loaded successfully!");
 }
@@ -660,7 +662,8 @@ function generateAllSchedules(courses) {
         seen.add(signature);
         valid.push(sched);
     }
-
+    console.log("VALID SCHEDULES:", valid.length);
+    console.log(valid);
     return valid;
 }
 
