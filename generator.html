@@ -376,101 +376,92 @@ function parseCourses() {
         line = line.replace("On Your Worksheet", "");
         line = line.replace(/\t/g, " ");
         line = line.replace(/Click here.*$/, "");
-        line = line.replace(/\s+to\s+/i, " - ");   // "to" → "-"
-        line = line.replace(/ {2,}/g, " ").trim(); // ⭐ FIXED: collapse only 2+ spaces
+        line = line.replace(/\s+to\s+/i, " - ");
+        line = line.replace(/ {2,}/g, " ").trim();
         if (line.length > 0) cleaned.push(line);
     }
 
     const courses = {};
 
-    // ---------- HELPERS ----------
     function isLecture(sec) {
-        return /^[A-Z]$/.test(sec);          // A, B, C
+        return /^[A-Z]$/.test(sec);
     }
 
     function isLab(sec) {
-        return /^L\d+$/.test(sec);           // L1, L2, L3...
+        return /^L\d+$/.test(sec);
     }
 
     function isTutorial(sec) {
-        return /^[A-Z](\d{1,2}|T)$/.test(sec); // A1, A01, AT, BT, etc.
+        return /^[A-Z](\d{1,2}|T)$/.test(sec);
     }
 
     // ---------- MAIN PARSE LOOP ----------
     for (let line of cleaned) {
 
-        // CRN SUBJECT NUMBER SECTION REST
         const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z0-9]+)\s+(.*)$/i);
         if (!m) continue;
 
         const [_, crn, subj, num, sec, rest] = m;
         const code = subj + num;
 
-    // ---------- EXTRACT DAYS ----------
-    let days = [];
-    
-    // spaced pairs like "Mon Wed", "Tue Thu", "Wed Fri"
-    const SPACED_DAY_PAIRS = [
-        ["Mon Wed", ["Mon", "Wed"]],
-        ["Tue Thu", ["Tue", "Thu"]],
-        ["Wed Fri", ["Wed", "Fri"]],
-        ["Mon Fri", ["Mon", "Fri"]],
-        ["Tue Fri", ["Tue", "Fri"]],
-        ["Thu Fri", ["Thu", "Fri"]],
-    ];
-    
-    for (const [pattern, expanded] of SPACED_DAY_PAIRS) {
-        if (rest.includes(pattern)) {
-            days.push(...expanded);
-        }
-    }
-    
-    // single days
-    for (const d of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
-        if (rest.includes(d)) {
-            days.push(d);
-        }
-    }
-    
-    // dedupe
-    days = [...new Set(days)];
-    if (!days.length) continue;
-    
-    // ---------- EXTRACT TIMES ----------
-    const timeMatch =
-        rest.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/) ||
-        rest.match(/(\d{1,2}:\d{2})\s+(\d{1,2}:\d{2})/);
-    
-    if (!timeMatch) continue;
-    
-    const start = timeMatch[1];
-    const end   = timeMatch[2];
+        // ---------- EXTRACT DAYS ----------
+        let days = [];
 
-        const entry = {
-            course: code,
-            section: sec,
-            days,
-            start,
-            end
-        };
+        const SPACED_DAY_PAIRS = [
+            ["Mon Wed", ["Mon", "Wed"]],
+            ["Tue Thu", ["Tue", "Thu"]],
+            ["Wed Fri", ["Wed", "Fri"]],
+            ["Mon Fri", ["Mon", "Fri"]],
+            ["Tue Fri", ["Tue", "Fri"]],
+            ["Thu Fri", ["Thu", "Fri"]],
+        ];
 
-        // ---------- CLASSIFY ----------
+        for (const [pattern, expanded] of SPACED_DAY_PAIRS) {
+            if (rest.includes(pattern)) {
+                days.push(...expanded);
+            }
+        }
+
+        for (const d of ["Mon", "Tue", "Wed", "Thu", "Fri"]) {
+            if (rest.includes(d)) {
+                days.push(d);
+            }
+        }
+
+        days = [...new Set(days)];
+        if (!days.length) continue;
+
+        // ---------- EXTRACT TIMES ----------
+        const timeMatch =
+            rest.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/) ||
+            rest.match(/(\d{1,2}:\d{2})\s+(\d{1,2}:\d{2})/);
+
+        if (!timeMatch) continue;
+
+        const start = timeMatch[1];
+        const end   = timeMatch[2];
+
+        if (!courses[code]) {
+            courses[code] = { lecture: [], lab: [], tutorial: [] };
+        }
+
+        const entry = { course: code, section: sec, days, start, end };
+
         if (isLecture(sec)) {
             entry.type = "lecture";
-            entry.letter = sec;              // A, B, C
+            entry.letter = sec;
             courses[code].lecture.push(entry);
         }
         else if (isLab(sec)) {
             entry.type = "lab";
-            courses[code].lab.push(entry);   // labs can go with ANY lecture
+            courses[code].lab.push(entry);
         }
         else if (isTutorial(sec)) {
             entry.type = "tutorial";
-            entry.lectureLetter = sec[0];    // first char: A, B, etc.
+            entry.lectureLetter = sec[0];
             courses[code].tutorial.push(entry);
         }
         else {
-            // fallback: treat unknown as lecture
             entry.type = "lecture";
             courses[code].lecture.push(entry);
         }
@@ -479,6 +470,7 @@ function parseCourses() {
     window.courses = courses;
     alert("Courses loaded successfully!");
 }
+
 
 
 
