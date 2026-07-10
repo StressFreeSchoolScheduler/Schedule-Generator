@@ -398,7 +398,8 @@ function parseCourses() {
     // ---------- MAIN PARSE LOOP ----------
     for (let line of cleaned) {
 
-        const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z][0-9A-Z]*)\s+(?=[A-Za-z])/);
+        const m = line.match(/(\d{5})\s+([A-Z]{4})\s+(\d{4})\s+([A-Z][0-9A-Z]*)\s+/);
+
 
         if (!m) continue;
 
