@@ -575,6 +575,10 @@ function generateAllSchedules(courses) {
                 // ⭐ Pair tutorials ONLY with matching lecture prefix
                 for (let tut of d.tutorial) {
                     if (tut.section.startsWith(lecPrefix)) {
+                        // Lecture only (no tutorial)
+                        combos.push([code, lec, null]);
+                        
+                        // Lecture + tutorial
                         combos.push([code, lec, tut]);
                     }
                 }
