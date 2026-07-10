@@ -576,31 +576,58 @@ function generateAllSchedules(courses) {
         const hasTutorials = d.tutorial && d.tutorial.length > 0;
         const hasLabs = d.lab && d.lab.length > 0;
         
-        if (hasTutorials || hasLabs) {
-            for (let lec of d.lecture) {
-                const lecPrefix = lec.section[0]; // A, B, C
+        let combos = [];
         
-                // ⭐ Pair tutorials ONLY with matching lecture prefix
-                for (let tut of d.tutorial) {
-                    if (tut.section.startsWith(lecPrefix)) {
-                        // Lecture only (no tutorial)
-                        combos.push([code, lec, null]);
-                        
-                        // Lecture + tutorial
-                        combos.push([code, lec, tut]);
+        for (const lec of d.lecture) {
+        
+            const lecPrefix = lec.section[0];
+        
+            // Collect tutorials that match this lecture
+            const matchingTutorials = d.tutorial.filter(t => t.section.startsWith(lecPrefix));
+        
+            // Collect labs that match this lecture
+            const matchingLabs = d.lab.filter(l => l.section.startsWith(lecPrefix));
+        
+            // If course has tutorials but none match → skip this lecture
+            if (d.tutorial.length > 0 && matchingTutorials.length === 0) {
+                continue;
+            }
+        
+            // If course has labs but none match → skip this lecture
+            if (d.lab.length > 0 && matchingLabs.length === 0) {
+                continue;
+            }
+        
+            // If course has BOTH tutorials and labs → generate all combinations
+            if (d.tutorial.length > 0 && d.lab.length > 0) {
+                for (const tut of matchingTutorials) {
+                    for (const lab of matchingLabs) {
+                        combos.push([code, lec, tut, lab]);
                     }
                 }
+                continue;
+            }
         
-                // ⭐ Pair labs with ANY lecture
-                for (let lab of d.lab) {
+            // If course has tutorials only
+            if (d.tutorial.length > 0) {
+                for (const tut of matchingTutorials) {
+                    combos.push([code, lec, tut]);
+                }
+                continue;
+            }
+        
+            // If course has labs only
+            if (d.lab.length > 0) {
+                for (const lab of matchingLabs) {
                     combos.push([code, lec, lab]);
                 }
+                continue;
             }
-        } else {
-            for (let lec of d.lecture) {
-                combos.push([code, lec, null]);
-            }
+        
+            // If course has neither tutorials nor labs → lecture only
+            combos.push([code, lec]);
         }
+
 
         if (combos.length > 0) options.push(combos);
     }
