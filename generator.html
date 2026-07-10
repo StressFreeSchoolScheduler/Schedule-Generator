@@ -569,12 +569,8 @@ function generateAllSchedules(courses) {
 
     for (const code in courses) {
         const d = courses[code];
-        let combos = [];
 
         if (!d.lecture || d.lecture.length === 0) continue;
-
-        const hasTutorials = d.tutorial && d.tutorial.length > 0;
-        const hasLabs = d.lab && d.lab.length > 0;
         
         let combos = [];
         
