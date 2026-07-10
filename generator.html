@@ -408,6 +408,14 @@ function parseCourses() {
         const pos = line.indexOf(`${subj} ${num} ${sec}`) + `${subj} ${num} ${sec}`.length;
         const rest = line.substring(pos).trim();
         const code = subj + num;
+        const dayIndex = rest.search(/\b(Mon|Tue|Wed|Thu|Fri)\b/);
+        let courseName = "";
+        
+        if (dayIndex > 0) {
+            courseName = rest.substring(0, dayIndex).trim();
+        } else {
+            courseName = "";
+        }
 
         // ---------- EXTRACT DAYS ----------
         let days = [];
@@ -451,8 +459,14 @@ function parseCourses() {
         const end   = timeMatch[2];
 
         if (!courses[code]) {
-            courses[code] = { lecture: [], lab: [], tutorial: [] };
+            courses[code] = { 
+                name: courseName, 
+                lecture: [], 
+                lab: [], 
+                tutorial: [] 
+            };
         }
+
 
         const entry = { course: code, section: sec, days, start, end };    
         console.log("Loaded:", entry.course, entry.section, entry.days, entry.start, entry.end);
@@ -972,7 +986,7 @@ events.forEach(ev => {
             block.style.gridRow = `${startRow} / ${endRow}`;
     
             block.innerHTML =
-                `<strong>${ev.fullName}</strong><br>${ev.course} ${ev.section}<br>${ev.start}–${ev.end}`;
+                `<strong>${courses[ev.course].name}</strong><br>${ev.course} ${ev.section}<br>${ev.start}–${ev.end}`;
 
     
             container.appendChild(block);
