@@ -405,7 +405,7 @@ function parseCourses() {
         }
 
         const [_, crn, subj, num, sec] = m;
-        const pos = line.indexOf(sec);
+        const pos = line.indexOf(`${subj} ${num} ${sec}`) + `${subj} ${num} ${sec}`.length;
         const rest = line.substring(pos + sec.length).trim();
         const code = subj + num;
 
